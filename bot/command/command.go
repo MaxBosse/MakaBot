@@ -51,4 +51,5 @@ func Register(command Command) {
 func waitandDelete(c *Context, m *discordgo.Message) {
 	time.Sleep(time.Second * time.Duration(c.Conf.AutoDeleteSeconds))
 	c.Session.ChannelMessageDelete(m.ChannelID, m.ID)
+	c.Session.ChannelMessageDelete(c.Message.ChannelID, c.Message.ID)
 }
