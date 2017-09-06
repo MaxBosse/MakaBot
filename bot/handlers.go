@@ -65,7 +65,15 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		}
 
 		// Execute
-		command.Commands[split[0]].Message(context)
+		if cmd, ok := command.Commands[split[0]]; ok {
+			cmd.Message(context)
+			return
+		}
+
+		_, err = s.ChannelMessageSend(c.ID, "Unknown function.")
+		if err != nil {
+			log.Errorln(err)
+		}
 		return
 	}
 }

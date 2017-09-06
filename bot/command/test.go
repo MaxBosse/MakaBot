@@ -31,7 +31,7 @@ func (t *Test) SubCommands() map[string]Command {
 }
 
 func (t *Test) Message(c *Context) {
-	log.Debugln(t.Name() + " called")
+	log.Debugln(c.Invoked + t.Name() + " called")
 	var err error
 
 	// Handle sub-commands

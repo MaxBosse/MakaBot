@@ -30,7 +30,7 @@ func (t *Help) SubCommands() map[string]Command {
 }
 
 func (t *Help) Message(c *Context) {
-	log.Debugln(t.Name() + " called")
+	log.Debugln(c.Invoked + t.Name() + " called")
 	var desc string
 
 	if len(c.Args) != 0 {
@@ -70,8 +70,7 @@ func (t *Help) Message(c *Context) {
 }
 
 func (t *Help) createEmbedMessage(c *Context, desc string) {
-	log.Debugln(c.Message.Author.ID)
-	log.Debugln(c.Message.Author.Avatar)
+	log.Debugln(desc)
 	embed := discordgo.MessageEmbed{}
 	embed.Author = &discordgo.MessageEmbedAuthor{
 		Name:    c.Message.Author.Username,
