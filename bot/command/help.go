@@ -48,7 +48,7 @@ func (t *Help) Message(c *Context) {
 			desc += "\n\nSubcommands:"
 
 			for subCommandName, subCommand := range cmd.SubCommands() {
-				desc += fmt.Sprintf("\n`%s%s %s %s` - %s", c.Conf.Prefix, command, subCommandName, subCommand.Usage(), subCommand.Description())
+				desc += fmt.Sprintf("\n`%s%s %s %s` - %s", c.Conf.Prefix, c.Invoked+command, subCommandName, subCommand.Usage(), subCommand.Description())
 			}
 		}
 
@@ -62,7 +62,7 @@ func (t *Help) Message(c *Context) {
 		desc += "\n\nSubcommands:"
 
 		for subCommandName, subCommand := range Commands {
-			desc += fmt.Sprintf("\n`%s%s %s` - %s", c.Conf.Prefix, subCommandName, subCommand.Usage(), subCommand.Description())
+			desc += fmt.Sprintf("\n`%s%s %s` - %s", c.Conf.Prefix, c.Invoked+subCommandName, subCommand.Usage(), subCommand.Description())
 		}
 	}
 
