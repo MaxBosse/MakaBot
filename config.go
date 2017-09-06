@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/MaxBosse/MakaBot/bot"
+	"github.com/MaxBosse/MakaBot/bot/structs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,7 +14,7 @@ type Config struct {
 	InfluxDBUser     string
 	InfluxDBPassword string
 	DiscordToken     string
-	Servers          []*bot.DiscordServer
+	Servers          []*structs.DiscordServer
 }
 
 func (config *Config) Parse(data []byte) error {
