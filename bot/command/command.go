@@ -3,6 +3,7 @@ package command
 import (
 	"time"
 
+	"github.com/MaxBosse/MakaBot/bot/structs"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -18,12 +19,7 @@ type Context struct {
 	RawText string
 	Args    []string
 	Invoked string
-	Conf    Config
-}
-
-type Config struct {
-	Prefix            string
-	AutoDeleteSeconds int
+	Conf    *structs.DiscordServer
 }
 
 func (c *Context) SendEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {

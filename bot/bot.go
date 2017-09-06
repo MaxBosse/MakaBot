@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/HeroesAwaken/GoAwaken/core"
+	"github.com/MaxBosse/MakaBot/bot/structs"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,38 +16,21 @@ type MakaBot struct {
 	iDB            *core.InfluxDB
 	batchTicker    *time.Ticker
 	regexUserID    *regexp.Regexp
-	discordServers map[string]*DiscordServer
+	discordServers map[string]*structs.DiscordServer
 	mem            runtime.MemStats
 }
 
-type DiscordServer struct {
-	GuildID           string
-	Nickname          string
-	Prefix            string
-	AutoDeleteSeconds int
-	BotChannels       []string
-	Roles             map[string]*DiscordRole
-	Attributes        map[string]string
-	metricsTickers    time.Ticker
-}
-
-type DiscordRole struct {
-	RoleID     string
-	RoleName   string
-	Attributes map[string]string
-}
-
-func NewMakaBot(metrics *core.InfluxDB, discordServers []*DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
+func NewMakaBot(metrics *core.InfluxDB, discordServers []*structs.DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
 	var err error
 
 	bot := new(MakaBot)
 	bot.iDB = metrics
 	bot.mem = mem
-	bot.discordServers = make(map[string]*DiscordServer)
+	bot.discordServers = make(map[string]*structs.DiscordServer)
 
 	// Generate Roles-Maps
 	for _, discordServer := range discordServers {
-		tmpRoles := make(map[string]*DiscordRole)
+		tmpRoles := make(map[string]*structs.DiscordRole)
 
 		for index, key := range discordServer.Roles {
 

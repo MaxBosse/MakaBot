@@ -54,8 +54,7 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		context.Guild = g
 		context.Channel = c
 		context.Message = m.Message
-		context.Conf.Prefix = bot.discordServers[g.ID].Prefix
-		context.Conf.AutoDeleteSeconds = bot.discordServers[g.ID].AutoDeleteSeconds
+		context.Conf = bot.discordServers[g.ID]
 
 		// Remove the prefix for the raw message
 		context.RawText = m.Content[len(bot.discordServers[g.ID].Prefix):]
