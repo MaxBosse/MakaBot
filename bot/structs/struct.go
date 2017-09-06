@@ -3,6 +3,7 @@ package structs
 import "time"
 
 type DiscordServer struct {
+	Enabled           bool
 	GuildID           string
 	Nickname          string
 	Prefix            string

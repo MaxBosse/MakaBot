@@ -54,6 +54,14 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
+	if _, ok := bot.discordServers[g.ID]; !ok {
+		return
+	}
+
+	if !bot.discordServers[g.ID].Enabled {
+		return
+	}
+
 	// check if the message starts with our prefix
 	if strings.HasPrefix(m.Content, bot.discordServers[g.ID].Prefix) {
 		log.Notef("[%s.%s]: %s > %s", g.Name, c.Name, m.Author.Username, m.Content)
