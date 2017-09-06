@@ -70,7 +70,6 @@ func (t *Help) Message(c *Context) {
 }
 
 func (t *Help) createEmbedMessage(c *Context, desc string) {
-	log.Debugln(desc)
 	embed := discordgo.MessageEmbed{}
 	embed.Author = &discordgo.MessageEmbedAuthor{
 		Name:    c.Message.Author.Username,
