@@ -2,6 +2,7 @@ package bot
 
 import (
 	"strings"
+	"time"
 
 	"github.com/MaxBosse/MakaBot/bot/command"
 	"github.com/MaxBosse/MakaBot/bot/utils"
@@ -11,6 +12,19 @@ import (
 
 func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 	log.Debugln("Bot ready")
+	guilds, _ := s.UserGuilds(100, "", "")
+	for _, g := range guilds {
+		s.RequestGuildMembers(g.ID, "", 0)
+
+		guild, _ := s.Guild(g.ID)
+		bot.CollectGuildMetrics(s, guild)
+		guildTicker := time.NewTicker(time.Second * 1)
+		go func() {
+			for range guildTicker.C {
+				bot.CollectGuildMetrics(s, guild)
+			}
+		}()
+	}
 }
 
 func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
@@ -79,6 +93,14 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 }
 
 func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMembersChunk) {
+	for _, g := range s.State.Guilds {
+		if g.ID == c.GuildID {
+			newm := append(g.Members, c.Members...)
+			utils.RemoveDuplicateMembers(&newm)
+			g.Members = newm
+			break
+		}
+	}
 }
 
 func (bot *MakaBot) memberAdd(s *discordgo.Session, event *discordgo.GuildMemberAdd) {

@@ -5,22 +5,22 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/HeroesAwaken/GoAwaken/core"
 	"github.com/MaxBosse/MakaBot/bot/structs"
+	"github.com/MaxBosse/MakaBot/bot/utils"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
 
 type MakaBot struct {
 	dg             *discordgo.Session
-	iDB            *core.InfluxDB
+	iDB            *utils.InfluxDB
 	batchTicker    *time.Ticker
 	regexUserID    *regexp.Regexp
 	discordServers map[string]*structs.DiscordServer
 	mem            runtime.MemStats
 }
 
-func NewMakaBot(metrics *core.InfluxDB, discordServers []*structs.DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
+func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
 	var err error
 
 	bot := new(MakaBot)
@@ -56,7 +56,7 @@ func NewMakaBot(metrics *core.InfluxDB, discordServers []*structs.DiscordServer,
 
 	// Collect memory statistics
 	bot.CollectGlobalMetrics()
-	bot.batchTicker = time.NewTicker(time.Second * 10)
+	bot.batchTicker = time.NewTicker(time.Second * 1)
 	go func() {
 		for range bot.batchTicker.C {
 			bot.CollectGlobalMetrics()
@@ -101,5 +101,68 @@ func (bot *MakaBot) CollectGlobalMetrics() {
 	err := bot.iDB.AddMetric("server_metrics", tags, fields)
 	if err != nil {
 		log.Errorln("Error adding Metric:", err)
+	}
+}
+
+func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild) {
+	roles := make(map[string]int)
+	rolesStruct := make(map[string]*discordgo.Role)
+
+	for _, member := range g.Members {
+		for _, role := range member.Roles {
+			_, ok := rolesStruct[role]
+
+			if !ok {
+				dRole, err := s.State.Role(g.ID, role)
+				if err != nil {
+					log.Errorln("Could not get discord role")
+					return
+				}
+
+				rolesStruct[role] = dRole
+			}
+
+			roles[rolesStruct[role].Name]++
+		}
+	}
+
+	online := make(map[string]int)
+	for _, presence := range g.Presences {
+		online[string(presence.Status)]++
+	}
+
+	tags := map[string]string{"metric": "total_members", "server": g.Name}
+	fields := map[string]interface{}{
+		"totalMembers": g.MemberCount,
+	}
+
+	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
+	if err != nil {
+		log.Errorln("Error adding Metric:", err)
+	}
+
+	for roleName := range roles {
+		tags := map[string]string{"metric": "role_members", "server": g.Name, "roleName": roleName}
+		fields := map[string]interface{}{
+			"totalMembers": roles[roleName],
+			//"onlineMembers": online["roles"][roleName],
+		}
+
+		err := bot.iDB.AddMetric("discord_metrics", tags, fields)
+		if err != nil {
+			log.Errorln("Error adding Metric:", err)
+		}
+	}
+
+	for status := range online {
+		tags := map[string]string{"metric": "status_members", "server": g.Name, "status": status}
+		fields := map[string]interface{}{
+			"onlineMembers": online[status],
+		}
+
+		err := bot.iDB.AddMetric("discord_metrics", tags, fields)
+		if err != nil {
+			log.Errorln("Error adding Metric:", err)
+		}
 	}
 }

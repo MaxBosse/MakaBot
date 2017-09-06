@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/HeroesAwaken/GoAwaken/core"
 	"github.com/MaxBosse/MakaBot/bot"
+	"github.com/MaxBosse/MakaBot/bot/utils"
 	"github.com/MaxBosse/MakaBot/log"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 
-	metricConnection := new(core.InfluxDB)
+	metricConnection := new(utils.InfluxDB)
 	err = metricConnection.New(MyConfig.InfluxDBHost, MyConfig.InfluxDBDatabase, MyConfig.InfluxDBUser, MyConfig.InfluxDBPassword, AppName, Version)
 	if err != nil {
 		log.Fatalln("Error connecting to MetricsDB:", err)
