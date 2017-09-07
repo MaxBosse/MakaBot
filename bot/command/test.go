@@ -32,7 +32,6 @@ func (t *Test) SubCommands() map[string]Command {
 
 func (t *Test) Message(c *Context) {
 	log.Debugln(c.Invoked + t.Name() + " called")
-	var err error
 
 	// Handle sub-commands
 	if len(c.Args) != 0 {
@@ -46,8 +45,5 @@ func (t *Test) Message(c *Context) {
 		}
 	}
 
-	_, err = c.Session.ChannelMessageSend(c.Channel.ID, "This is a test message.")
-	if err != nil {
-		log.Errorln(err)
-	}
+	c.Send("This is a test message.")
 }

@@ -34,7 +34,6 @@ func (t *Role) SubCommands() map[string]Command {
 
 func (t *Role) Message(c *Context) {
 	log.Debugln(c.Invoked + t.Name() + " called")
-	var err error
 
 	// Handle sub-commands
 	if len(c.Args) != 0 {
@@ -48,9 +47,7 @@ func (t *Role) Message(c *Context) {
 		}
 	}
 
-	_, err = c.Session.ChannelMessageSend(c.Channel.ID, "Please use `"+c.Conf.Prefix+t.Name()+" "+t.Usage()+"`\n"+
-		"Use `"+c.Conf.Prefix+"help "+t.Name()+"` for more info!")
-	if err != nil {
-		log.Errorln(err)
-	}
+	c.Send("Please use `" + c.Conf.Prefix + t.Name() + " " + t.Usage() + "`\n" +
+		"Use `" + c.Conf.Prefix + "help " + t.Name() + "` for more info!")
+
 }

@@ -29,10 +29,7 @@ func (t *RoleAdd) Message(c *Context) {
 	roleConfig, ok := c.Conf.Roles[role]
 
 	if !ok {
-		_, err = c.Session.ChannelMessageSend(c.Channel.ID, "Unknown role `"+role+"`")
-		if err != nil {
-			log.Errorln(err)
-		}
+		c.Send("Unknown role `" + role + "`")
 		return
 	}
 
@@ -40,23 +37,14 @@ func (t *RoleAdd) Message(c *Context) {
 		err = c.Session.GuildMemberRoleAdd(c.Guild.ID, c.Message.Author.ID, roleConfig.RoleID)
 		if err != nil {
 			log.Errorln(err)
-			_, err = c.Session.ChannelMessageSend(c.Channel.ID, "Error adding role `"+role+"`")
-			if err != nil {
-				log.Errorln(err)
-			}
+			c.Send("Error adding role `" + role + "`")
 			return
 		}
 
-		_, err = c.Session.ChannelMessageSend(c.Channel.ID, "Added role `"+role+"`")
-		if err != nil {
-			log.Errorln(err)
-		}
+		c.Send("Added role `" + role + "`")
 		return
 	}
 
-	_, err = c.Session.ChannelMessageSend(c.Channel.ID, "Not allowed to add role `"+role+"`")
-	if err != nil {
-		log.Errorln(err)
-	}
+	c.Send("Not allowed to add role `" + role + "`")
 	return
 }

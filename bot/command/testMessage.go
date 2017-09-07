@@ -23,10 +23,6 @@ func (t *TestMessage) SubCommands() map[string]Command {
 
 func (t *TestMessage) Message(c *Context) {
 	log.Debugln(c.Invoked + t.Name() + " called")
-	var err error
 
-	_, err = c.Session.ChannelMessageSend(c.Channel.ID, strings.Join(c.Args, " "))
-	if err != nil {
-		log.Errorln(err)
-	}
+	c.Send(strings.Join(c.Args, " "))
 }

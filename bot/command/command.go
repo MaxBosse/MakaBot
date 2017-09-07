@@ -32,6 +32,16 @@ func (c *Context) SendEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, 
 	return m, err
 }
 
+func (c *Context) Send(message string) (*discordgo.Message, error) {
+	m, err := c.Session.ChannelMessageSend(c.Message.ChannelID, message)
+
+	if c.Conf.AutoDeleteSeconds != 0 {
+		go waitandDelete(c, m)
+	}
+
+	return m, err
+}
+
 type Command interface {
 	Message(*Context)
 	Description() string

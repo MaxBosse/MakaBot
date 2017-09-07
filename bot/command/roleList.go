@@ -23,7 +23,6 @@ func (t *RoleList) SubCommands() map[string]Command {
 
 func (t *RoleList) Message(c *Context) {
 	log.Debugln(c.Invoked + t.Name() + " called")
-	var err error
 	var desc string
 
 	roles := []string{}
@@ -40,9 +39,5 @@ func (t *RoleList) Message(c *Context) {
 	}
 
 	desc = "Available roles: " + strings.Join(roles, ", ")
-
-	_, err = c.Session.ChannelMessageSend(c.Channel.ID, desc)
-	if err != nil {
-		log.Errorln(err)
-	}
+	c.Send(desc)
 }
