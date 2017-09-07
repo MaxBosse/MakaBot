@@ -18,7 +18,6 @@ type Context struct {
 	Message *discordgo.Message
 	RawText string
 	Args    []string
-	Invoked string
 	Conf    *structs.DiscordServer
 }
 
@@ -48,6 +47,8 @@ type Command interface {
 	Usage() string
 	Name() string
 	SubCommands() map[string]Command
+	Parent() Command
+	SetParent(Command)
 }
 
 func init() {

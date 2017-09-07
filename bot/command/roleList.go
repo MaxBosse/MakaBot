@@ -3,7 +3,9 @@ package command
 import "github.com/MaxBosse/MakaBot/log"
 import "strings"
 
-type RoleList struct{}
+type RoleList struct {
+	parent Command
+}
 
 func (t *RoleList) Name() string {
 	return "list"
@@ -21,8 +23,16 @@ func (t *RoleList) SubCommands() map[string]Command {
 	return make(map[string]Command)
 }
 
+func (t *RoleList) Parent() Command {
+	return t.parent
+}
+
+func (t *RoleList) SetParent(cmd Command) {
+	t.parent = cmd
+}
+
 func (t *RoleList) Message(c *Context) {
-	log.Debugln(c.Invoked + t.Name() + " called")
+	log.Debugln(t.Name() + " called")
 	var desc string
 
 	roles := []string{}

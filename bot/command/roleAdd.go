@@ -3,7 +3,9 @@ package command
 import "github.com/MaxBosse/MakaBot/log"
 import "strings"
 
-type RoleAdd struct{}
+type RoleAdd struct {
+	parent Command
+}
 
 func (t *RoleAdd) Name() string {
 	return "add"
@@ -21,8 +23,16 @@ func (t *RoleAdd) SubCommands() map[string]Command {
 	return make(map[string]Command)
 }
 
+func (t *RoleAdd) Parent() Command {
+	return t.parent
+}
+
+func (t *RoleAdd) SetParent(cmd Command) {
+	t.parent = cmd
+}
+
 func (t *RoleAdd) Message(c *Context) {
-	log.Debugln(c.Invoked + t.Name() + " called")
+	log.Debugln(t.Name() + " called")
 	var err error
 
 	role := strings.Join(c.Args, " ")

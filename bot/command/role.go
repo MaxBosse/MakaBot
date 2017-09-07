@@ -4,6 +4,7 @@ import "github.com/MaxBosse/MakaBot/log"
 
 type Role struct {
 	subCommands map[string]Command
+	parent      Command
 }
 
 func init() {
@@ -12,6 +13,7 @@ func init() {
 	cmd.subCommands["add"] = new(RoleAdd)
 	cmd.subCommands["del"] = new(RoleDel)
 	cmd.subCommands["list"] = new(RoleList)
+	cmd.subCommands["help"] = new(Help)
 
 	Register(cmd)
 }
@@ -32,14 +34,22 @@ func (t *Role) SubCommands() map[string]Command {
 	return t.subCommands
 }
 
+func (t *Role) Parent() Command {
+	return t.parent
+}
+
+func (t *Role) SetParent(cmd Command) {
+	t.parent = cmd
+}
+
 func (t *Role) Message(c *Context) {
-	log.Debugln(c.Invoked + t.Name() + " called")
+	log.Debugln(t.Name() + " called")
 
 	// Handle sub-commands
 	if len(c.Args) != 0 {
 		cmd, ok := t.subCommands[c.Args[0]]
 		if ok {
-			c.Invoked += t.Name() + " "
+			cmd.SetParent(t)
 			c.Args = c.Args[1:]
 			cmd.Message(c)
 
