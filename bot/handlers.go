@@ -121,3 +121,165 @@ func (bot *MakaBot) memberRemove(s *discordgo.Session, event *discordgo.GuildMem
 func (bot *MakaBot) memberUpdate(s *discordgo.Session, event *discordgo.GuildMemberUpdate) {
 	log.Noteln("User", event.User.Username, "updated.")
 }
+
+// Only used for metric-collection!
+func (bot *MakaBot) event(s *discordgo.Session, event *discordgo.Event) {
+	log.Noteln("Event " + event.Type + " called.")
+	bot.CollectGenericGlobalEventMetric(event.Type)
+
+	switch t := event.Struct.(type) {
+	case *discordgo.Ready:
+		for _, g := range t.Guilds {
+			bot.CollectGenericGuildEventMetric(s, g, event.Type)
+		}
+	case *discordgo.GuildCreate:
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+	case *discordgo.GuildUpdate:
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+	case *discordgo.VoiceServerUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.VoiceStateUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildDelete:
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+	case *discordgo.GuildMemberAdd:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildMemberUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildMemberRemove:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildRoleCreate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildRoleUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildRoleDelete:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.GuildEmojisUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.ChannelCreate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.ChannelUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.ChannelDelete:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.MessageCreate:
+		c, err := s.State.Channel(t.ChannelID)
+		if err != nil {
+			log.Warning("Unable to get Channel", err)
+			return
+		}
+
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.MessageUpdate:
+		c, err := s.State.Channel(t.ChannelID)
+		if err != nil {
+			log.Warning("Unable to get Channel", err)
+			return
+		}
+
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.MessageDelete:
+		c, err := s.State.Channel(t.ChannelID)
+		if err != nil {
+			log.Warning("Unable to get Channel", err)
+			return
+		}
+
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.MessageDeleteBulk:
+		c, err := s.State.Channel(t.ChannelID)
+		if err != nil {
+			log.Warning("Unable to get Channel", err)
+			return
+		}
+
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.PresenceUpdate:
+		g, err := s.State.Guild(t.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	}
+}

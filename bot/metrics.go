@@ -11,7 +11,7 @@ import (
 // And sends them to influxdb
 func (bot *MakaBot) CollectGlobalMetrics() {
 	runtime.ReadMemStats(&bot.mem)
-	tags := map[string]string{"metric": "server_metrics", "server": "global"}
+	tags := map[string]string{"metric": "server_metrics", "server": "global", "serverID": "-1"}
 	fields := map[string]interface{}{
 		"memAlloc":      int(bot.mem.Alloc),
 		"memTotalAlloc": int(bot.mem.TotalAlloc),
@@ -85,5 +85,29 @@ func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild
 		if err != nil {
 			log.Errorln("Error adding Metric:", err)
 		}
+	}
+}
+
+func (bot *MakaBot) CollectGenericGlobalEventMetric(event string) {
+	tags := map[string]string{"event": event, "server": "global", "serverID": "-1"}
+	fields := map[string]interface{}{
+		"value": 1,
+	}
+
+	err := bot.iDB.AddMetric("server_metrics", tags, fields)
+	if err != nil {
+		log.Errorln("Error adding Metric:", err)
+	}
+}
+
+func (bot *MakaBot) CollectGenericGuildEventMetric(s *discordgo.Session, g *discordgo.Guild, event string) {
+	tags := map[string]string{"event": event, "server": g.Name, "serverID": g.ID}
+	fields := map[string]interface{}{
+		"value": 1,
+	}
+
+	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
+	if err != nil {
+		log.Errorln("Error adding Metric:", err)
 	}
 }

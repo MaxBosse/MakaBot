@@ -76,6 +76,8 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 	bot.dg.AddHandler(bot.memberRemove)
 	bot.dg.AddHandler(bot.memberUpdate)
 
+	bot.dg.AddHandler(bot.event)
+
 	err = bot.dg.Open()
 	if err != nil {
 		log.Errorln("Error opening Discord session:", err)
