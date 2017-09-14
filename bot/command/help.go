@@ -41,6 +41,10 @@ func (t *Help) SetParent(cmd Command) {
 
 func (t *Help) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
+	if handleSubCommands(c, t) {
+		return
+	}
+
 	var desc, invoked string
 
 	if t.parent != nil {

@@ -33,6 +33,10 @@ func (t *RoleList) SetParent(cmd Command) {
 
 func (t *RoleList) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
+	if handleSubCommands(c, t) {
+		return
+	}
+
 	var desc string
 
 	roles := []string{}

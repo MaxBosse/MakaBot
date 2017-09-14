@@ -59,6 +59,21 @@ func Register(command Command) {
 	Commands[command.Name()] = command
 }
 
+func handleSubCommands(c *Context, command Command) bool {
+	// Handle sub-commands
+	if len(c.Args) != 0 {
+		cmd, ok := command.SubCommands()[c.Args[0]]
+		if ok {
+			cmd.SetParent(command)
+			c.Args = c.Args[1:]
+			cmd.Message(c)
+
+			return true
+		}
+	}
+	return false
+}
+
 func waitandDelete(c *Context, m *discordgo.Message) {
 	time.Sleep(time.Second * time.Duration(c.Conf.AutoDeleteSeconds))
 	c.Session.ChannelMessageDelete(m.ChannelID, m.ID)

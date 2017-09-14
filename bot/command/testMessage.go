@@ -33,6 +33,9 @@ func (t *TestMessage) SetParent(cmd Command) {
 
 func (t *TestMessage) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
+	if handleSubCommands(c, t) {
+		return
+	}
 
 	c.Send(strings.Join(c.Args, " "))
 }

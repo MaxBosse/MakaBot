@@ -33,6 +33,10 @@ func (t *RoleAdd) SetParent(cmd Command) {
 
 func (t *RoleAdd) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
+	if handleSubCommands(c, t) {
+		return
+	}
+
 	var err error
 
 	role := strings.Join(c.Args, " ")

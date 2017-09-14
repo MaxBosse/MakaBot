@@ -44,17 +44,8 @@ func (t *Role) SetParent(cmd Command) {
 
 func (t *Role) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
-
-	// Handle sub-commands
-	if len(c.Args) != 0 {
-		cmd, ok := t.subCommands[c.Args[0]]
-		if ok {
-			cmd.SetParent(t)
-			c.Args = c.Args[1:]
-			cmd.Message(c)
-
-			return
-		}
+	if handleSubCommands(c, t) {
+		return
 	}
 
 	c.Send("Please use `" + c.Conf.Prefix + t.Name() + " " + t.Usage() + "`\n" +
