@@ -12,25 +12,24 @@ import (
 
 func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 	log.Debugln("Bot ready")
-	guilds, _ := s.UserGuilds(100, "", "")
-	for _, g := range guilds {
-		s.RequestGuildMembers(g.ID, "", 0)
-
-		guild, _ := s.Guild(g.ID)
-		bot.CollectGuildMetrics(s, guild)
-		guildTicker := time.NewTicker(time.Second * 10)
-		go func() {
-			for range guildTicker.C {
-				bot.CollectGuildMetrics(s, guild)
-			}
-		}()
-	}
 }
 
 func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
 	if event.Guild.Unavailable {
 		return
 	}
+	log.Debugln("Joining Guild " + event.Guild.Name)
+
+	s.RequestGuildMembers(event.Guild.ID, "", 0)
+
+	guild, _ := s.Guild(event.Guild.ID)
+	bot.CollectGuildMetrics(s, guild)
+	guildTicker := time.NewTicker(time.Second * 10)
+	go func() {
+		for range guildTicker.C {
+			bot.CollectGuildMetrics(s, guild)
+		}
+	}()
 }
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
