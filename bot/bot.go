@@ -68,6 +68,10 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 		return nil
 	}
 
+	if log.LogFlag <= log.DebugFlag {
+		bot.dg.Debug = true
+	}
+
 	bot.dg.AddHandler(bot.ready)
 	bot.dg.AddHandler(bot.messageCreate)
 	bot.dg.AddHandler(bot.guildCreate)
