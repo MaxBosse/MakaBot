@@ -52,7 +52,7 @@ func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild
 		online[string(presence.Status)]++
 	}
 
-	tags := map[string]string{"metric": "total_members", "server": g.Name}
+	tags := map[string]string{"metric": "total_members", "server": g.Name, "serverID": g.ID}
 	fields := map[string]interface{}{
 		"totalMembers": g.MemberCount,
 	}
@@ -63,7 +63,7 @@ func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild
 	}
 
 	for roleName := range roles {
-		tags := map[string]string{"metric": "role_members", "server": g.Name, "roleName": roleName}
+		tags := map[string]string{"metric": "role_members", "server": g.Name, "serverID": g.ID, "roleName": roleName}
 		fields := map[string]interface{}{
 			"totalMembers": roles[roleName],
 			//"onlineMembers": online["roles"][roleName],
@@ -76,7 +76,7 @@ func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild
 	}
 
 	for status := range online {
-		tags := map[string]string{"metric": "status_members", "server": g.Name, "status": status}
+		tags := map[string]string{"metric": "status_members", "server": g.Name, "serverID": g.ID, "status": status}
 		fields := map[string]interface{}{
 			"onlineMembers": online[status],
 		}
