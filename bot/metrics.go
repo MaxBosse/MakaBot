@@ -31,11 +31,7 @@ func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session) {
 	online := make(map[string]int)
 	totalMembers := 0
 
-	guilds, _ := s.UserGuilds(0, "", "")
-
-	for _, uG := range guilds {
-		g, _ := s.State.Guild(uG.ID)
-
+	for _, g := range s.State.Guilds {
 		for _, member := range g.Members {
 			for _, role := range member.Roles {
 				_, ok := rolesStruct[role]
