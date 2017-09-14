@@ -18,7 +18,7 @@ func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 
 		guild, _ := s.Guild(g.ID)
 		bot.CollectGuildMetrics(s, guild)
-		guildTicker := time.NewTicker(time.Second * 1)
+		guildTicker := time.NewTicker(time.Second * 10)
 		go func() {
 			for range guildTicker.C {
 				bot.CollectGuildMetrics(s, guild)

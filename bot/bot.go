@@ -56,7 +56,7 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 
 	// Collect memory statistics
 	bot.CollectGlobalMetrics()
-	bot.batchTicker = time.NewTicker(time.Second * 1)
+	bot.batchTicker = time.NewTicker(time.Second * 10)
 	go func() {
 		for range bot.batchTicker.C {
 			bot.CollectGlobalMetrics()
