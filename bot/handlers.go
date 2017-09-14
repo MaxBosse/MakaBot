@@ -289,5 +289,18 @@ func (bot *MakaBot) event(s *discordgo.Session, event *discordgo.Event) {
 			return
 		}
 		bot.CollectGenericGuildEventMetric(s, g, event.Type)
+	case *discordgo.TypingStart:
+		c, err := s.State.Channel(t.ChannelID)
+		if err != nil {
+			log.Warning("Unable to get Channel", err)
+			return
+		}
+
+		g, err := s.State.Guild(c.GuildID)
+		if err != nil {
+			log.Warning("Unable to get Guild", err)
+			return
+		}
+		bot.CollectGenericGuildEventMetric(s, g, event.Type)
 	}
 }
