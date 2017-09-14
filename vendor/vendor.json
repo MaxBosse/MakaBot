@@ -1,0 +1,61 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "WfccRmCvXV4jLnVmERizd4qASIg=",
+			"path": "github.com/bwmarrin/discordgo",
+			"revision": "d420e28024ad527390b43aa7f64e029083e11989",
+			"revisionTime": "2017-07-08T15:09:04Z"
+		},
+		{
+			"checksumSHA1": "4mai1Q1zl5QTW2VwJnfQ6r/vlJw=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "a69d9f6de432e2c6b296a947d8a5ee88f68522cf",
+			"revisionTime": "2017-07-18T20:23:41Z"
+		},
+		{
+			"checksumSHA1": "Q1KeaJmpfJroWThx5yrzC7wLRSk=",
+			"path": "github.com/influxdata/influxdb/client/v2",
+			"revision": "ae66d327a7d0eeea9921a9cc3c7b53a0fb33d01d",
+			"revisionTime": "2017-08-23T15:50:40Z"
+		},
+		{
+			"checksumSHA1": "nvZBZPk46lEl4WvE0ulgiZJo890=",
+			"path": "github.com/influxdata/influxdb/models",
+			"revision": "ae66d327a7d0eeea9921a9cc3c7b53a0fb33d01d",
+			"revisionTime": "2017-08-23T15:50:40Z"
+		},
+		{
+			"checksumSHA1": "qyFg5Bij49nhBsPE1LyVLUZxmfU=",
+			"path": "github.com/influxdata/influxdb/pkg/escape",
+			"revision": "ae66d327a7d0eeea9921a9cc3c7b53a0fb33d01d",
+			"revisionTime": "2017-08-23T15:50:40Z"
+		},
+		{
+			"checksumSHA1": "Y/FcWB2/xSfX1rRp7HYhktHNw8s=",
+			"path": "golang.org/x/crypto/nacl/secretbox",
+			"revision": "eb71ad9bd329b5ac0fd0148dd99bd62e8be8e035",
+			"revisionTime": "2017-08-07T10:11:13Z"
+		},
+		{
+			"checksumSHA1": "kVKE0OX1Xdw5mG7XKT86DLLKE2I=",
+			"path": "golang.org/x/crypto/poly1305",
+			"revision": "eb71ad9bd329b5ac0fd0148dd99bd62e8be8e035",
+			"revisionTime": "2017-08-07T10:11:13Z"
+		},
+		{
+			"checksumSHA1": "YJKRGua3sv61rGQRHhZphoBeF7w=",
+			"path": "golang.org/x/crypto/salsa20/salsa",
+			"revision": "eb71ad9bd329b5ac0fd0148dd99bd62e8be8e035",
+			"revisionTime": "2017-08-07T10:11:13Z"
+		},
+		{
+			"checksumSHA1": "aUDnhyGTHeiMERx4L4jx/zLsvSQ=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "eb3733d160e74a9c7e442f435eb3bea458e1d19f",
+			"revisionTime": "2017-08-12T16:00:11Z"
+		}
+	],
+	"rootPath": "github.com/MaxBosse/MakaBot"
+}

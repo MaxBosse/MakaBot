@@ -3,3 +3,4 @@ Debug
 *.exe
 config.yml
 MakaBot
+vendor/*/**
