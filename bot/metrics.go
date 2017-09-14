@@ -25,10 +25,11 @@ func (bot *MakaBot) CollectGlobalMetrics() {
 	}
 }
 
-func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session, g *discordgo.Guild) {
+func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session) {
 	roles := make(map[string]int)
 	rolesStruct := make(map[string]*discordgo.Role)
 	online := make(map[string]int)
+	totalMembers := 0
 
 	guilds, _ := s.UserGuilds(0, "", "")
 
@@ -56,11 +57,13 @@ func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session, g *discordgo
 		for _, presence := range g.Presences {
 			online[string(presence.Status)]++
 		}
+
+		totalMembers += g.MemberCount
 	}
 
 	tags := map[string]string{"metric": "total_members", "server": "global", "serverID": "-1"}
 	fields := map[string]interface{}{
-		"totalMembers": g.MemberCount,
+		"totalMembers": totalMembers,
 	}
 
 	err := bot.iDB.AddMetric("discord_metrics", tags, fields)

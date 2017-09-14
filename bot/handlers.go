@@ -12,6 +12,14 @@ import (
 
 func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 	log.Debugln("Bot ready")
+
+	bot.CollectGlobalGuildMetrics(s)
+	guildTicker := time.NewTicker(time.Second * 10)
+	go func() {
+		for range guildTicker.C {
+			bot.CollectGlobalGuildMetrics(s)
+		}
+	}()
 }
 
 func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
