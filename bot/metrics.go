@@ -168,6 +168,26 @@ func (bot *MakaBot) CollectGenericGlobalEventMetric(event string) {
 	}
 }
 
+func (bot *MakaBot) CollectGenericGuildEventMetricByChannelID(s *discordgo.Session, cID string, event string) {
+	c, err := s.State.Channel(cID)
+	if err != nil {
+		log.Warning("Unable to get Channel", err)
+		return
+	}
+
+	bot.CollectGenericGuildEventMetricByGuildID(s, c.GuildID, event)
+}
+
+func (bot *MakaBot) CollectGenericGuildEventMetricByGuildID(s *discordgo.Session, gID string, event string) {
+	g, err := s.State.Guild(gID)
+	if err != nil {
+		log.Warning("Unable to get Guild", err)
+		return
+	}
+
+	bot.CollectGenericGuildEventMetric(s, g, event)
+}
+
 func (bot *MakaBot) CollectGenericGuildEventMetric(s *discordgo.Session, g *discordgo.Guild, event string) {
 	tags := map[string]string{"event": event, "server": g.Name, "serverID": g.ID}
 	fields := map[string]interface{}{
