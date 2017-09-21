@@ -13,10 +13,15 @@ import (
 func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 	log.Debugln("Bot ready")
 
+	// Stop ticker if already running to start with new session
+	if _, ok := bot.tickers["globalGuildTicker"]; !ok {
+		bot.tickers["globalGuildTicker"].Stop()
+	}
+
 	bot.CollectGlobalGuildMetrics(s)
-	guildTicker := time.NewTicker(time.Second * 10)
+	bot.tickers["globalGuildTicker"] = time.NewTicker(time.Second * 10)
 	go func() {
-		for range guildTicker.C {
+		for range bot.tickers["globalGuildTicker"].C {
 			bot.CollectGlobalGuildMetrics(s)
 		}
 	}()
@@ -31,10 +36,16 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 	s.RequestGuildMembers(event.Guild.ID, "", 0)
 
 	guild, _ := s.Guild(event.Guild.ID)
+
+	// Stop ticker if already running to start with new session
+	if _, ok := bot.tickers["guildTicker_"+event.Guild.ID]; !ok {
+		bot.tickers["guildTicker_"+event.Guild.ID].Stop()
+	}
+
 	bot.CollectGuildMetrics(s, guild)
-	guildTicker := time.NewTicker(time.Second * 10)
+	bot.tickers["guildTicker_"+event.Guild.ID] = time.NewTicker(time.Second * 10)
 	go func() {
-		for range guildTicker.C {
+		for range bot.tickers["guildTicker_"+event.Guild.ID].C {
 			bot.CollectGuildMetrics(s, guild)
 		}
 	}()

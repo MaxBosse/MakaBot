@@ -17,6 +17,7 @@ type MakaBot struct {
 	regexUserID    *regexp.Regexp
 	discordServers map[string]*structs.DiscordServer
 	mem            runtime.MemStats
+	tickers        map[string]*time.Ticker
 }
 
 func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
@@ -26,6 +27,7 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 	bot.iDB = metrics
 	bot.mem = mem
 	bot.discordServers = make(map[string]*structs.DiscordServer)
+	bot.tickers = make(map[string]*time.Ticker)
 
 	// Generate Roles-Maps
 	for _, discordServer := range discordServers {
@@ -55,9 +57,9 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 
 	// Collect memory statistics
 	bot.CollectGlobalMetrics()
-	batchTicker := time.NewTicker(time.Second * 10)
+	bot.tickers["globalTicker"] = time.NewTicker(time.Second * 10)
 	go func() {
-		for range batchTicker.C {
+		for range bot.tickers["globalTicker"].C {
 			bot.CollectGlobalMetrics()
 		}
 	}()
