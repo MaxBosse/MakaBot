@@ -1,7 +1,13 @@
-influxdbhost: "http://127.0.0.1:8086"
-influxdbdatabase: "gameBackend"
-influxdbuser: ""
-influxdbpassword: ""
+influx:
+  host: "http://127.0.0.1:8086"
+  database: "gameBackend"
+  user: ""
+  password: ""
+mysql:
+  host: "127.0.0.1"
+  database: "db"
+  user: "user"
+  password: "pass"
 discordtoken: ""
 servers:
   - guildid: "354722723353853962"

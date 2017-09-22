@@ -9,12 +9,20 @@ import (
 )
 
 type Config struct {
-	InfluxDBHost     string
-	InfluxDBDatabase string
-	InfluxDBUser     string
-	InfluxDBPassword string
-	DiscordToken     string
-	Servers          []*structs.DiscordServer
+	Influx struct {
+		Host     string
+		Database string
+		User     string
+		Password string
+	}
+	MySQL struct {
+		Host     string
+		Database string
+		User     string
+		Password string
+	}
+	DiscordToken string
+	Servers      []*structs.DiscordServer
 }
 
 func (config *Config) Parse(data []byte) error {
