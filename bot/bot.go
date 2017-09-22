@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/MaxBosse/MakaBot/bot/structs"
-	"github.com/MaxBosse/MakaBot/bot/utils"
 	"github.com/MaxBosse/MakaBot/log"
+	"github.com/MaxBosse/MakaBot/utils"
 	"github.com/bwmarrin/discordgo"
 )
 

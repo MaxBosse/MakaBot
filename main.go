@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"github.com/MaxBosse/MakaBot/bot"
-	"github.com/MaxBosse/MakaBot/bot/utils"
 	"github.com/MaxBosse/MakaBot/log"
+	"github.com/MaxBosse/MakaBot/utils"
 )
 
 func init() {

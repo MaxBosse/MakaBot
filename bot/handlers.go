@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/MaxBosse/MakaBot/bot/command"
-	"github.com/MaxBosse/MakaBot/bot/utils"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
@@ -84,7 +83,7 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 	if strings.HasPrefix(m.Content, bot.discordServers[g.ID].Prefix) {
 		log.Notef("[%s.%s]: %s > %s", g.Name, c.Name, m.Author.Username, m.Content)
 
-		if !utils.StringInSlice(c.Name, bot.discordServers[g.ID].BotChannels) {
+		if !StringInSlice(c.Name, bot.discordServers[g.ID].BotChannels) {
 			log.Debugln("Channel not in whitelist", c.Name, bot.discordServers[g.ID].BotChannels)
 			return
 		}
@@ -122,7 +121,7 @@ func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMe
 	for _, g := range s.State.Guilds {
 		if g.ID == c.GuildID {
 			newm := append(g.Members, c.Members...)
-			utils.RemoveDuplicateMembers(&newm)
+			RemoveDuplicateMembers(&newm)
 			g.Members = newm
 			break
 		}
