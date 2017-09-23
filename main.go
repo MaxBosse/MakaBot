@@ -6,10 +6,14 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/MaxBosse/MakaBot/bot"
+	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/MaxBosse/MakaBot/utils"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func init() {
@@ -47,10 +51,45 @@ func main() {
 		log.Fatalln("Error connecting to MetricsDB:", err)
 	}
 
-	bot.NewMakaBot(metricConnection, MyConfig.Servers, mem, MyConfig.DiscordToken)
+	// Collect memory statistics
+	collectGlobalMetrics(metricConnection)
+	globalTicker := time.NewTicker(time.Second * 10)
+	go func() {
+		for range globalTicker.C {
+			collectGlobalMetrics(metricConnection)
+		}
+	}()
+
+	dbConnection := new(utils.DB)
+	dbSQL, err := dbConnection.New(MyConfig.MySQL.Host, MyConfig.MySQL.Database, MyConfig.MySQL.User, MyConfig.MySQL.Password)
+	if err != nil {
+		log.Fatalln("Error connecting to DB:", err)
+	}
+
+	cache := cache.NewCache(metricConnection, dbSQL)
+
+	bot.NewMakaBot(MyConfig.DiscordToken, metricConnection, dbSQL, cache)
 
 	log.Noteln("MakaBot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
+}
+
+// CollectGlobalMetrics collects global metrics about the bot and environment
+// And sends them to influxdb
+func collectGlobalMetrics(iDB *utils.InfluxDB) {
+	runtime.ReadMemStats(&mem)
+	tags := map[string]string{"metric": "server_metrics", "server": "global", "serverID": "-1"}
+	fields := map[string]interface{}{
+		"memAlloc":      int(mem.Alloc),
+		"memTotalAlloc": int(mem.TotalAlloc),
+		"memHeapAlloc":  int(mem.HeapAlloc),
+		"memHeapSys":    int(mem.HeapSys),
+	}
+
+	err := iDB.AddMetric("server_metrics", tags, fields)
+	if err != nil {
+		log.Errorln("Error adding Metric:", err)
+	}
 }

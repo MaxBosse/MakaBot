@@ -1,29 +1,9 @@
 package bot
 
 import (
-	"runtime"
-
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
-
-// CollectGlobalMetrics collects global metrics about the bot and environment
-// And sends them to influxdb
-func (bot *MakaBot) CollectGlobalMetrics() {
-	runtime.ReadMemStats(&bot.mem)
-	tags := map[string]string{"metric": "server_metrics", "server": "global", "serverID": "-1"}
-	fields := map[string]interface{}{
-		"memAlloc":      int(bot.mem.Alloc),
-		"memTotalAlloc": int(bot.mem.TotalAlloc),
-		"memHeapAlloc":  int(bot.mem.HeapAlloc),
-		"memHeapSys":    int(bot.mem.HeapSys),
-	}
-
-	err := bot.iDB.AddMetric("server_metrics", tags, fields)
-	if err != nil {
-		log.Errorln("Error adding Metric:", err)
-	}
-}
 
 func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session) {
 	roles := make(map[string]int)

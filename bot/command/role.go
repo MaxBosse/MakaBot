@@ -1,6 +1,9 @@
 package command
 
-import "github.com/MaxBosse/MakaBot/log"
+import (
+	"github.com/MaxBosse/MakaBot/cache"
+	"github.com/MaxBosse/MakaBot/log"
+)
 
 type Role struct {
 	subCommands map[string]Command
@@ -48,7 +51,12 @@ func (t *Role) Message(c *Context) {
 		return
 	}
 
-	c.Send("Please use `" + c.Conf.Prefix + t.Name() + " " + t.Usage() + "`\n" +
-		"Use `" + c.Conf.Prefix + "help " + t.Name() + "` for more info!")
+	serverConf, err := c.Cache.GetServer(c.Guild.ID)
+	if err != nil {
+		serverConf = cache.CacheServer{}
+	}
+
+	c.Send("Please use `" + serverConf.Prefix + t.Name() + " " + t.Usage() + "`\n" +
+		"Use `" + serverConf.Prefix + "help " + t.Name() + "` for more info!")
 
 }

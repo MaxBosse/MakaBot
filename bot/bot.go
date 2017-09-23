@@ -1,68 +1,35 @@
 package bot
 
 import (
+	"database/sql"
 	"regexp"
-	"runtime"
 	"time"
 
-	"github.com/MaxBosse/MakaBot/bot/structs"
+	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/MaxBosse/MakaBot/utils"
 	"github.com/bwmarrin/discordgo"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type MakaBot struct {
-	dg             *discordgo.Session
-	iDB            *utils.InfluxDB
-	regexUserID    *regexp.Regexp
-	discordServers map[string]*structs.DiscordServer
-	mem            runtime.MemStats
-	tickers        map[string]*time.Ticker
+	dg          *discordgo.Session
+	iDB         *utils.InfluxDB
+	db          *sql.DB
+	regexUserID *regexp.Regexp
+	cache       *cache.Cache
+	tickers     map[string]*time.Ticker
 }
 
-func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer, mem runtime.MemStats, discordToken string) *MakaBot {
+func NewMakaBot(discordToken string, metrics *utils.InfluxDB, db *sql.DB, cache *cache.Cache) *MakaBot {
 	var err error
 
 	bot := new(MakaBot)
 	bot.iDB = metrics
-	bot.mem = mem
-	bot.discordServers = make(map[string]*structs.DiscordServer)
 	bot.tickers = make(map[string]*time.Ticker)
-
-	// Generate Roles-Maps
-	for _, discordServer := range discordServers {
-		tmpRoles := make(map[string]*structs.DiscordRole)
-
-		for index, key := range discordServer.Roles {
-
-			// Create a roles[1521512578] == DiscordRole matching
-			if index != "" {
-				key.RoleID = index
-				tmpRoles[index] = key
-			} else if key.RoleID != "" {
-				tmpRoles[key.RoleID] = key
-			} else {
-				log.Fatalln("Could not determine RoleID -> Role", index, key)
-			}
-
-			// Create a roles["SysAdmin"] == DiscordRole matching
-			if key.RoleName != "" {
-				tmpRoles[key.RoleName] = key
-			}
-		}
-		discordServer.Roles = tmpRoles
-
-		bot.discordServers[discordServer.GuildID] = discordServer
-	}
-
-	// Collect memory statistics
-	bot.CollectGlobalMetrics()
-	bot.tickers["globalTicker"] = time.NewTicker(time.Second * 10)
-	go func() {
-		for range bot.tickers["globalTicker"].C {
-			bot.CollectGlobalMetrics()
-		}
-	}()
+	bot.db = db
+	bot.cache = cache
 
 	bot.dg, err = discordgo.New("Bot " + discordToken)
 	if err != nil {
@@ -70,9 +37,9 @@ func NewMakaBot(metrics *utils.InfluxDB, discordServers []*structs.DiscordServer
 		return nil
 	}
 
-	if log.LogFlag <= log.DebugFlag {
+	/*if log.LogFlag <= log.DebugFlag {
 		bot.dg.Debug = true
-	}
+	}*/
 
 	bot.dg.AddHandler(bot.ready)
 	bot.dg.AddHandler(bot.messageCreate)

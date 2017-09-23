@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 
+	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
@@ -45,6 +46,11 @@ func (t *Help) Message(c *Context) {
 		return
 	}
 
+	serverConf, err := c.Cache.GetServer(c.Guild.ID)
+	if err != nil {
+		serverConf = cache.CacheServer{}
+	}
+
 	var desc, invoked string
 
 	if t.parent != nil {
@@ -61,12 +67,12 @@ func (t *Help) Message(c *Context) {
 
 	if t.parent != nil {
 		desc = "Commands:\n"
-		desc = fmt.Sprintf("`%s%s` - %s", c.Conf.Prefix+invoked, t.parent.Usage(), t.parent.Description())
+		desc = fmt.Sprintf("`%s%s` - %s", serverConf.Prefix+invoked, t.parent.Usage(), t.parent.Description())
 		if len(t.parent.SubCommands()) != 0 {
 			desc += "\n\nSubcommands:"
 
 			for subCommandName, subCommand := range t.parent.SubCommands() {
-				desc += fmt.Sprintf("\n`%s%s %s` - %s", c.Conf.Prefix+invoked, subCommandName, subCommand.Usage(), subCommand.Description())
+				desc += fmt.Sprintf("\n`%s%s %s` - %s", serverConf.Prefix+invoked, subCommandName, subCommand.Usage(), subCommand.Description())
 			}
 		}
 
@@ -78,7 +84,7 @@ func (t *Help) Message(c *Context) {
 		desc += "Commands:"
 
 		for subCommandName, subCommand := range Commands {
-			desc += fmt.Sprintf("\n`%s%s %s` - %s", c.Conf.Prefix+invoked, subCommandName, subCommand.Usage(), subCommand.Description())
+			desc += fmt.Sprintf("\n`%s%s %s` - %s", serverConf.Prefix+invoked, subCommandName, subCommand.Usage(), subCommand.Description())
 		}
 	}
 
@@ -86,6 +92,11 @@ func (t *Help) Message(c *Context) {
 }
 
 func (t *Help) createEmbedMessage(c *Context, desc string) {
+	serverConf, err := c.Cache.GetServer(c.Guild.ID)
+	if err != nil {
+		serverConf = cache.CacheServer{}
+	}
+
 	embed := discordgo.MessageEmbed{}
 	embed.Author = &discordgo.MessageEmbedAuthor{
 		Name:    c.Message.Author.Username,
@@ -93,6 +104,6 @@ func (t *Help) createEmbedMessage(c *Context, desc string) {
 	}
 	embed.Description = desc
 	embed.Description += "\n\n"
-	embed.Description += fmt.Sprintf("[MakaBot](https://github.com/MaxBosse/MakaBot) - use `%s[command] help` for more info!", c.Conf.Prefix)
+	embed.Description += fmt.Sprintf("[MakaBot](https://github.com/MaxBosse/MakaBot) - use `%s[command] help` for more info!", serverConf.Prefix)
 	c.SendEmbed(&embed)
 }

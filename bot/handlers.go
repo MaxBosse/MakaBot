@@ -5,12 +5,15 @@ import (
 	"time"
 
 	"github.com/MaxBosse/MakaBot/bot/command"
+	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/bwmarrin/discordgo"
 )
 
 func (bot *MakaBot) ready(s *discordgo.Session, event *discordgo.Ready) {
 	log.Debugln("Bot ready")
+
+	bot.cache.UpdateSession(s)
 
 	// Stop ticker if already running to start with new session
 	if _, ok := bot.tickers["globalGuildTicker"]; ok {
@@ -34,13 +37,79 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 
 	s.RequestGuildMembers(event.Guild.ID, "", 0)
 
-	guild, _ := s.Guild(event.Guild.ID)
+	// Check if Server already exists in DB otherwise create new one with default values
+	guildKey := cache.CacheServerKey{
+		GuildID: event.Guild.ID,
+	}
+	_, err := bot.cache.Get(guildKey)
+	if err != nil {
+		guildValue := cache.CacheServer{
+			GuildID:  event.Guild.ID,
+			Name:     event.Guild.Name,
+			Nickname: "MakaBot",
+			Prefix:   "!",
+		}
+		bot.cache.Set(guildKey, guildValue)
+	}
 
+	serverConf, err := bot.cache.GetServer(event.Guild.ID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
+	// Get all roles and put into cache/db if not already
+	roles, err := s.GuildRoles(event.Guild.ID)
+	if err != nil {
+		log.Warningln("Unable to get guild roles", err)
+	}
+	for _, role := range roles {
+		// Check if Server already exists in DB otherwise create new one with default values
+		roleKey := cache.CacheRoleKey{
+			GuildID: event.Guild.ID,
+			RoleID:  role.ID,
+		}
+		_, err := bot.cache.Get(roleKey)
+		if err != nil {
+			roleValue := cache.CacheRole{
+				SID:     serverConf.ID,
+				GuildID: serverConf.GuildID,
+				RoleID:  role.ID,
+				Name:    role.Name,
+			}
+			bot.cache.Set(roleKey, roleValue)
+		}
+	}
+
+	// Get all channels and put into cache/db if not already
+	channels, err := s.GuildChannels(event.Guild.ID)
+	if err != nil {
+		log.Warningln("Unable to get guild channels", err)
+	}
+	for _, channel := range channels {
+		// Check if Server already exists in DB otherwise create new one with default values
+		channelKey := cache.CacheChannelKey{
+			ChannelID: channel.ID,
+		}
+		_, err := bot.cache.Get(channelKey)
+		if err != nil {
+			channelValue := cache.CacheChannel{
+				SID:       serverConf.ID,
+				GuildID:   serverConf.GuildID,
+				ChannelID: channel.ID,
+				Name:      channel.Name,
+				CType:     int(channel.Type),
+			}
+			bot.cache.Set(channelKey, channelValue)
+		}
+	}
+
+	// METRIC COLLECTION
 	// Stop ticker if already running to start with new session
 	if _, ok := bot.tickers["guildTicker_"+event.Guild.ID]; ok {
 		bot.tickers["guildTicker_"+event.Guild.ID].Stop()
 	}
 
+	guild, _ := s.Guild(event.Guild.ID)
 	bot.CollectGuildMetrics(s, guild)
 	bot.tickers["guildTicker_"+event.Guild.ID] = time.NewTicker(time.Second * 10)
 	go func() {
@@ -48,6 +117,7 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 			bot.CollectGuildMetrics(s, guild)
 		}
 	}()
+	// END METRIC COLLECTION
 }
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -71,32 +141,33 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 		return
 	}
 
-	if _, ok := bot.discordServers[g.ID]; !ok {
-		return
+	serverConf, err := bot.cache.GetServer(c.GuildID)
+	if err != nil {
+		serverConf = cache.CacheServer{}
 	}
 
-	if !bot.discordServers[g.ID].Enabled {
+	channelConf, err := bot.cache.GetChannel(m.ChannelID)
+	if err != nil {
+		channelConf = cache.CacheChannel{}
+	}
+
+	if !serverConf.Enabled || !channelConf.Listen {
 		return
 	}
 
 	// check if the message starts with our prefix
-	if strings.HasPrefix(m.Content, bot.discordServers[g.ID].Prefix) {
+	if strings.HasPrefix(m.Content, serverConf.Prefix) {
 		log.Notef("[%s.%s]: %s > %s", g.Name, c.Name, m.Author.Username, m.Content)
-
-		if !StringInSlice(c.Name, bot.discordServers[g.ID].BotChannels) {
-			log.Debugln("Channel not in whitelist", c.Name, bot.discordServers[g.ID].BotChannels)
-			return
-		}
 
 		context := new(command.Context)
 		context.Session = s
 		context.Guild = g
 		context.Channel = c
 		context.Message = m.Message
-		context.Conf = bot.discordServers[g.ID]
+		context.Cache = bot.cache
 
 		// Remove the prefix for the raw message
-		context.RawText = m.Content[len(bot.discordServers[g.ID].Prefix):]
+		context.RawText = m.Content[len(serverConf.Prefix):]
 
 		split := strings.Split(context.RawText, " ")
 		if len(split) > 1 {
@@ -142,7 +213,7 @@ func (bot *MakaBot) memberUpdate(s *discordgo.Session, event *discordgo.GuildMem
 
 // Only used for metric-collection!
 func (bot *MakaBot) event(s *discordgo.Session, event *discordgo.Event) {
-	log.Noteln("Event " + event.Type + " called.")
+	log.Debugln("Event " + event.Type + " called.")
 	bot.CollectGenericGlobalEventMetric(event.Type)
 
 	switch t := event.Struct.(type) {

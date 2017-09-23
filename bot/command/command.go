@@ -3,7 +3,7 @@ package command
 import (
 	"time"
 
-	"github.com/MaxBosse/MakaBot/bot/structs"
+	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -18,13 +18,17 @@ type Context struct {
 	Message *discordgo.Message
 	RawText string
 	Args    []string
-	Conf    *structs.DiscordServer
+	Cache   *cache.Cache
 }
 
 func (c *Context) SendEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
 	m, err := c.Session.ChannelMessageSendEmbed(c.Message.ChannelID, embed)
 
-	if c.Conf.AutoDeleteSeconds != 0 {
+	channelConf, err := c.Cache.GetChannel(c.Message.ChannelID)
+	if err != nil {
+		channelConf = cache.CacheChannel{}
+	}
+	if channelConf.AutoDelete != 0 {
 		go waitandDelete(c, m)
 	}
 
@@ -34,7 +38,12 @@ func (c *Context) SendEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, 
 func (c *Context) Send(message string) (*discordgo.Message, error) {
 	m, err := c.Session.ChannelMessageSend(c.Message.ChannelID, message)
 
-	if c.Conf.AutoDeleteSeconds != 0 {
+	channelConf, err := c.Cache.GetChannel(c.Message.ChannelID)
+	if err != nil {
+		channelConf = cache.CacheChannel{}
+	}
+
+	if channelConf.AutoDelete != 0 {
 		go waitandDelete(c, m)
 	}
 
@@ -75,7 +84,12 @@ func handleSubCommands(c *Context, command Command) bool {
 }
 
 func waitandDelete(c *Context, m *discordgo.Message) {
-	time.Sleep(time.Second * time.Duration(c.Conf.AutoDeleteSeconds))
+	channelConf, err := c.Cache.GetChannel(m.ChannelID)
+	if err != nil {
+		channelConf = cache.CacheChannel{}
+	}
+
+	time.Sleep(time.Second * time.Duration(channelConf.AutoDelete))
 	c.Session.ChannelMessageDelete(m.ChannelID, m.ID)
 	c.Session.ChannelMessageDelete(c.Message.ChannelID, c.Message.ID)
 }

@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/MaxBosse/MakaBot/bot/structs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,7 +21,6 @@ type Config struct {
 		Password string
 	}
 	DiscordToken string
-	Servers      []*structs.DiscordServer
 }
 
 func (config *Config) Parse(data []byte) error {

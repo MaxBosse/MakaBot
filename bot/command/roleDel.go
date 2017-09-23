@@ -1,7 +1,11 @@
 package command
 
-import "github.com/MaxBosse/MakaBot/log"
-import "strings"
+import (
+	"strings"
+
+	"github.com/MaxBosse/MakaBot/cache"
+	"github.com/MaxBosse/MakaBot/log"
+)
 
 type RoleDel struct {
 	parent Command
@@ -40,14 +44,12 @@ func (t *RoleDel) Message(c *Context) {
 	var err error
 
 	role := strings.Join(c.Args, " ")
-	roleConfig, ok := c.Conf.Roles[role]
-
-	if !ok {
-		c.Send("Unknown role `" + role + "`")
-		return
+	roleConfig, err := c.Cache.GetRoleByName(c.Guild.ID, role)
+	if err != nil {
+		roleConfig = cache.CacheRole{}
 	}
 
-	if selfAssign, ok := roleConfig.Attributes["selfAssign"]; ok && selfAssign == "true" {
+	if roleConfig.SelfAssign {
 		err = c.Session.GuildMemberRoleRemove(c.Guild.ID, c.Message.Author.ID, roleConfig.RoleID)
 		if err != nil {
 			c.Send("Error removing role `" + role + "`")

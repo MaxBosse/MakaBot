@@ -1,7 +1,11 @@
 package command
 
-import "github.com/MaxBosse/MakaBot/log"
-import "strings"
+import (
+	"strings"
+
+	"github.com/MaxBosse/MakaBot/cache"
+	"github.com/MaxBosse/MakaBot/log"
+)
 
 type RoleList struct {
 	parent Command
@@ -39,15 +43,21 @@ func (t *RoleList) Message(c *Context) {
 
 	var desc string
 
+	rolesConfig, err := c.Cache.GetRoles(c.Guild.ID)
+	log.Debugln(rolesConfig)
+	if err != nil {
+		log.Noteln("Unable to get roles", err)
+		rolesConfig = []cache.CacheRole{}
+	}
+
 	roles := []string{}
 	rolesInsert := make(map[string]bool)
-	for _, roleConf := range c.Conf.Roles {
-		if selfAssign, ok := roleConf.Attributes["selfAssign"]; ok && selfAssign == "true" {
-
+	for _, roleConf := range rolesConfig {
+		if roleConf.SelfAssign {
 			// Only add a role-name once
-			if !rolesInsert[roleConf.RoleName] {
-				roles = append(roles, roleConf.RoleName)
-				rolesInsert[roleConf.RoleName] = true
+			if !rolesInsert[roleConf.Name] {
+				roles = append(roles, roleConf.Name)
+				rolesInsert[roleConf.Name] = true
 			}
 		}
 	}
