@@ -22,9 +22,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 		if cache.session != nil {
 			cacheServer.Guild, err = cache.session.State.Guild(cacheServer.GuildID)
-			if err != nil {
-				log.Warningln("Unable to get Guild", err)
-			}
 		}
 		return cacheServer, nil
 	case CacheChannelKey:
@@ -37,9 +34,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 		if cache.session != nil {
 			cacheChannel.Channel, err = cache.session.State.Channel(cacheChannel.ChannelID)
-			if err != nil {
-				log.Warningln("Unable to get Channel", err)
-			}
 		}
 		return cacheChannel, nil
 	case CacheChannelName:
@@ -53,9 +47,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 		if cache.session != nil {
 			cacheChannel.Channel, err = cache.session.State.Channel(cacheChannel.ChannelID)
-			if err != nil {
-				log.Warningln("Unable to get Channel", err)
-			}
 		}
 		return cacheChannel, nil
 	case CacheRoleKey:
@@ -68,9 +59,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 		if cache.session != nil {
 			cacheRole.Role, err = cache.session.State.Role(cacheRole.GuildID, cacheRole.RoleID)
-			if err != nil {
-				log.Warningln("Unable to get Role", err)
-			}
 		}
 		return cacheRole, nil
 	case CacheRoleName:
@@ -83,9 +71,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 		if cache.session != nil {
 			cacheRole.Role, err = cache.session.State.Role(cacheRole.GuildID, cacheRole.RoleID)
-			if err != nil {
-				log.Warningln("Unable to get Role", err)
-			}
 		}
 		return cacheRole, nil
 	case CacheRoles:
@@ -108,9 +93,6 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 			if cache.session != nil {
 				cacheRole.Role, err = cache.session.State.Role(cacheRole.GuildID, cacheRole.RoleID)
-				if err != nil {
-					log.Warningln("Unable to get Role", err)
-				}
 			}
 
 			roles = append(roles, cacheRole)

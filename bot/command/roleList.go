@@ -61,7 +61,8 @@ func (t *RoleList) Message(c *Context) {
 			}
 		}
 	}
-
-	desc = "Available roles: " + strings.Join(roles, ", ")
-	c.Send(desc)
+	if len(roles) > 0 {
+		desc = "Available roles: " + strings.Join(roles, ", ")
+		c.Send(desc)
+	}
 }

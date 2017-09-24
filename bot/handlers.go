@@ -122,7 +122,6 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
-	// This isn't required in this specific example but it's a good practice.
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -209,6 +208,46 @@ func (bot *MakaBot) memberRemove(s *discordgo.Session, event *discordgo.GuildMem
 
 func (bot *MakaBot) memberUpdate(s *discordgo.Session, event *discordgo.GuildMemberUpdate) {
 	log.Noteln("User", event.User.Username, "updated.")
+}
+
+func (bot *MakaBot) roleUpdate(s *discordgo.Session, event *discordgo.GuildRoleUpdate) {
+	log.Noteln("Role", event.Role.Name, "updated.")
+	roleKey := cache.CacheRoleKey{
+		GuildID: event.GuildID,
+		RoleID:  event.Role.ID,
+	}
+	roleConfI, err := bot.cache.Get(roleKey)
+	if err != nil {
+		return
+	}
+	roleConf := roleConfI.(cache.CacheRole)
+	roleConf.Name = event.Role.Name
+	bot.cache.Set(roleKey, roleConf)
+}
+
+func (bot *MakaBot) roleDelete(s *discordgo.Session, event *discordgo.GuildRoleDelete) {
+	log.Noteln("Role", event.RoleID, "removed.")
+	bot.cache.DeleteRole(event.GuildID, event.RoleID)
+}
+
+func (bot *MakaBot) channelUpdate(s *discordgo.Session, event *discordgo.ChannelUpdate) {
+	log.Noteln("Channel", event.Name, "updated.")
+	channelKey := cache.CacheChannelKey{
+		ChannelID: event.ID,
+	}
+	channelConfI, err := bot.cache.Get(channelKey)
+	if err != nil {
+		return
+	}
+	channelConf := channelConfI.(cache.CacheChannel)
+	channelConf.Name = event.Name
+	channelConf.CType = int(event.Type)
+	bot.cache.Set(channelKey, channelConf)
+}
+
+func (bot *MakaBot) channelDelete(s *discordgo.Session, event *discordgo.ChannelDelete) {
+	log.Noteln("Channel", event.Name, "removed.")
+	bot.cache.DeleteChannel(event.ID)
 }
 
 // Only used for metric-collection!

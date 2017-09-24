@@ -39,6 +39,53 @@ func (cache *Cache) UpdateSession(s *discordgo.Session) {
 	cache.session = s
 }
 
+func (cache *Cache) DeleteRole(gID, rID string) error {
+	value := CacheRole{}
+	key := CacheRoleKey{
+		GuildID: gID,
+		RoleID:  rID,
+	}
+	keyRoles := CacheRoles{
+		GuildID: gID,
+	}
+	valueI, err := cache.Get(key)
+	if err != nil {
+		return nil
+	}
+	value = valueI.(CacheRole)
+
+	_, err = cache.cacheStmts.removeRole.Exec(value.ID)
+	if err != nil {
+		log.Warningln("Unable to remove role", err)
+	}
+
+	(*cache.gcache).Remove(key)
+	(*cache.gcache).Remove(keyRoles)
+
+	return err
+}
+
+func (cache *Cache) DeleteChannel(cID string) error {
+	value := CacheChannel{}
+	key := CacheChannelKey{
+		ChannelID: cID,
+	}
+	valueI, err := cache.Get(key)
+	if err != nil {
+		return nil
+	}
+	value = valueI.(CacheChannel)
+
+	_, err = cache.cacheStmts.removeChannel.Exec(value.ID)
+	if err != nil {
+		log.Warningln("Unable to remove role", err)
+	}
+
+	(*cache.gcache).Remove(key)
+
+	return err
+}
+
 func (cache *Cache) GetRoles(gID string) ([]CacheRole, error) {
 	value := []CacheRole{}
 	key := CacheRoles{

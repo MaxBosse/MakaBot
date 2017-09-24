@@ -18,11 +18,44 @@ type cacheStmts struct {
 	getChannelByRoleID      *sql.Stmt
 	getChannelByRoleName    *sql.Stmt
 	getRoles                *sql.Stmt
+	removeServer            *sql.Stmt
+	removeChannel           *sql.Stmt
+	removeRole              *sql.Stmt
 }
 
 func (cache *Cache) prepareStatements() *cacheStmts {
 	var stmts cacheStmts
 	var err error
+
+	stmts.removeRole, err = cache.db.Prepare(
+		"DELETE " +
+			"FROM " +
+			"	roles " +
+			"WHERE " +
+			"	roles.id = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement removeRole.", err.Error())
+	}
+
+	stmts.removeChannel, err = cache.db.Prepare(
+		"DELETE " +
+			"FROM " +
+			"	channels " +
+			"WHERE " +
+			"	channels.id = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement removeChannel.", err.Error())
+	}
+
+	stmts.removeServer, err = cache.db.Prepare(
+		"DELETE " +
+			"FROM " +
+			"	servers " +
+			"WHERE " +
+			"	servers.id = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement removeServer.", err.Error())
+	}
 
 	stmts.getRoles, err = cache.db.Prepare(
 		"SELECT " +
