@@ -52,6 +52,7 @@ func NewMakaBot(discordToken string, metrics *utils.InfluxDB, db *sql.DB, cache 
 	bot.dg.AddHandler(bot.roleDelete)
 	bot.dg.AddHandler(bot.channelUpdate)
 	bot.dg.AddHandler(bot.channelDelete)
+	bot.dg.AddHandler(bot.guildUpdate)
 
 	bot.dg.AddHandler(bot.event)
 
