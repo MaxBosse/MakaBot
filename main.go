@@ -12,6 +12,7 @@ import (
 	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/MaxBosse/MakaBot/utils"
+	"github.com/MaxBosse/MakaBot/web"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -69,6 +70,8 @@ func main() {
 	cache := cache.NewCache(metricConnection, dbSQL)
 
 	bot.NewMakaBot(MyConfig.DiscordToken, metricConnection, dbSQL, cache)
+
+	web.NewMakaWeb(MyConfig.WebBind, MyConfig.CookieSecret, metricConnection, dbSQL, cache)
 
 	log.Noteln("MakaBot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)

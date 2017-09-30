@@ -21,6 +21,8 @@ type Config struct {
 		Password string
 	}
 	DiscordToken string
+	WebBind      string
+	CookieSecret string
 }
 
 func (config *Config) Parse(data []byte) error {
