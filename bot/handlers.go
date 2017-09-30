@@ -252,6 +252,11 @@ func (bot *MakaBot) channelDelete(s *discordgo.Session, event *discordgo.Channel
 
 func (bot *MakaBot) guildUpdate(s *discordgo.Session, event *discordgo.GuildUpdate) {
 	log.Noteln("Guild", event.Name, "updated.")
+
+	if event.Guild.MemberCount == 0 {
+		s.RequestGuildMembers(event.Guild.ID, "", 0)
+	}
+
 	guildKey := cache.CacheServerKey{
 		GuildID: event.ID,
 	}
