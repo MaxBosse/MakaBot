@@ -272,57 +272,57 @@ func (bot *MakaBot) guildUpdate(s *discordgo.Session, event *discordgo.GuildUpda
 // Only used for metric-collection!
 func (bot *MakaBot) event(s *discordgo.Session, event *discordgo.Event) {
 	log.Debugln("Event " + event.Type + " called.")
-	bot.CollectGenericGlobalEventMetric(event.Type)
+	bot.CollectGenericGlobalEventMetric(event)
 
 	switch t := event.Struct.(type) {
 	case *discordgo.Ready:
 		for _, g := range t.Guilds {
-			bot.CollectGenericGuildEventMetric(s, g, event.Type)
+			bot.CollectGenericGuildEventMetric(s, g, event)
 		}
 	case *discordgo.GuildCreate:
-		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event)
 	case *discordgo.GuildUpdate:
-		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event)
 	case *discordgo.VoiceServerUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.VoiceStateUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildDelete:
-		bot.CollectGenericGuildEventMetric(s, t.Guild, event.Type)
+		bot.CollectGenericGuildEventMetric(s, t.Guild, event)
 	case *discordgo.GuildMemberAdd:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildMemberUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildMemberRemove:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildRoleCreate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildRoleUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildRoleDelete:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.GuildEmojisUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.ChannelCreate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.ChannelUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.ChannelDelete:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.MessageCreate:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	case *discordgo.MessageUpdate:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	case *discordgo.MessageDelete:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	case *discordgo.MessageDeleteBulk:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	case *discordgo.PresenceUpdate:
-		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event.Type)
+		bot.CollectGenericGuildEventMetricByGuildID(s, t.GuildID, event)
 	case *discordgo.TypingStart:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	case *discordgo.ChannelPinsUpdate:
-		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event.Type)
+		bot.CollectGenericGuildEventMetricByChannelID(s, t.ChannelID, event)
 	}
 
 }
