@@ -140,7 +140,7 @@ func (bot *MakaBot) CollectGenericGlobalEventMetric(event *discordgo.Event) {
 	tags := map[string]string{"event": event.Type, "server": "global", "serverID": "-1"}
 	fields := map[string]interface{}{
 		"value": 1,
-		"raw":   event.RawData,
+		"raw":   string(event.RawData),
 	}
 
 	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
@@ -173,7 +173,7 @@ func (bot *MakaBot) CollectGenericGuildEventMetric(s *discordgo.Session, g *disc
 	tags := map[string]string{"event": event.Type, "server": g.Name, "serverID": g.ID}
 	fields := map[string]interface{}{
 		"value": 1,
-		"raw":   event.RawData,
+		"raw":   string(event.RawData),
 	}
 
 	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
