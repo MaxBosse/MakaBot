@@ -136,10 +136,11 @@ func (bot *MakaBot) CollectGuildMetrics(s *discordgo.Session, g *discordgo.Guild
 	}
 }
 
-func (bot *MakaBot) CollectGenericGlobalEventMetric(event string) {
-	tags := map[string]string{"event": event, "server": "global", "serverID": "-1"}
+func (bot *MakaBot) CollectGenericGlobalEventMetric(event *discordgo.Event) {
+	tags := map[string]string{"event": event.Type, "server": "global", "serverID": "-1"}
 	fields := map[string]interface{}{
 		"value": 1,
+		"raw":   event.RawData,
 	}
 
 	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
@@ -148,7 +149,7 @@ func (bot *MakaBot) CollectGenericGlobalEventMetric(event string) {
 	}
 }
 
-func (bot *MakaBot) CollectGenericGuildEventMetricByChannelID(s *discordgo.Session, cID string, event string) {
+func (bot *MakaBot) CollectGenericGuildEventMetricByChannelID(s *discordgo.Session, cID string, event *discordgo.Event) {
 	c, err := s.State.Channel(cID)
 	if err != nil {
 		log.Warning("Unable to get Channel", err)
@@ -158,7 +159,7 @@ func (bot *MakaBot) CollectGenericGuildEventMetricByChannelID(s *discordgo.Sessi
 	bot.CollectGenericGuildEventMetricByGuildID(s, c.GuildID, event)
 }
 
-func (bot *MakaBot) CollectGenericGuildEventMetricByGuildID(s *discordgo.Session, gID string, event string) {
+func (bot *MakaBot) CollectGenericGuildEventMetricByGuildID(s *discordgo.Session, gID string, event *discordgo.Event) {
 	g, err := s.State.Guild(gID)
 	if err != nil {
 		log.Warning("Unable to get Guild", err)
@@ -168,10 +169,11 @@ func (bot *MakaBot) CollectGenericGuildEventMetricByGuildID(s *discordgo.Session
 	bot.CollectGenericGuildEventMetric(s, g, event)
 }
 
-func (bot *MakaBot) CollectGenericGuildEventMetric(s *discordgo.Session, g *discordgo.Guild, event string) {
-	tags := map[string]string{"event": event, "server": g.Name, "serverID": g.ID}
+func (bot *MakaBot) CollectGenericGuildEventMetric(s *discordgo.Session, g *discordgo.Guild, event *discordgo.Event) {
+	tags := map[string]string{"event": event.Type, "server": g.Name, "serverID": g.ID}
 	fields := map[string]interface{}{
 		"value": 1,
+		"raw":   event.RawData,
 	}
 
 	err := bot.iDB.AddMetric("discord_metrics", tags, fields)
