@@ -2,6 +2,7 @@ package cache
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/MaxBosse/MakaBot/utils"
@@ -37,6 +38,28 @@ func NewCache(metrics *utils.InfluxDB, db *sql.DB) *Cache {
 
 func (cache *Cache) UpdateSession(s *discordgo.Session) {
 	cache.session = s
+}
+
+func (cache *Cache) DeleteMember(gID, uID string) error {
+	value := CacheMember{}
+	key := CacheMemberGuildKey{
+		GuildID: gID,
+		UserID:  uID,
+	}
+	valueI, err := cache.Get(key)
+	if err != nil {
+		return nil
+	}
+	value = valueI.(CacheMember)
+
+	_, err = cache.cacheStmts.removeMember.Exec(value.ID)
+	if err != nil {
+		log.Warningln("Unable to remove member", err)
+	}
+
+	(*cache.gcache).Remove(key)
+
+	return err
 }
 
 func (cache *Cache) DeleteRole(gID, rID string) error {
@@ -84,6 +107,46 @@ func (cache *Cache) DeleteChannel(cID string) error {
 	(*cache.gcache).Remove(key)
 
 	return err
+}
+
+func (cache *Cache) GetMembers(gID string) ([]CacheMember, error) {
+	value := []CacheMember{}
+	key := CacheMembers{
+		GuildID: gID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.([]CacheMember)
+	}
+
+	return value, err
+}
+
+func (cache *Cache) GetMemberships(uID string) ([]CacheMember, error) {
+	value := []CacheMember{}
+	key := CacheMemberKey{
+		UserID: uID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.([]CacheMember)
+	}
+
+	return value, err
+}
+
+func (cache *Cache) GetMember(gID, uID string) (CacheMember, error) {
+	value := CacheMember{}
+	key := CacheMemberGuildKey{
+		GuildID: gID,
+		UserID:  uID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.(CacheMember)
+	}
+
+	return value, err
 }
 
 func (cache *Cache) GetRoles(gID string) ([]CacheRole, error) {
@@ -188,7 +251,33 @@ func (cache *Cache) Set(key interface{}, value interface{}) error {
 	case CacheRole:
 		_, err = cache.cacheStmts.setRole.Exec(t.SID, t.RoleID, t.SelfAssign, t.Name)
 		if err != nil {
-			log.Warningln("Unable to set channel", err)
+			log.Warningln("Unable to set role", err)
+		}
+	case CacheMember:
+		log.Debugln("Setting Member", t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick, t.JoinedAt)
+
+		joinedAt, err := time.Parse("2006-01-02T15:04:05-07:00", t.JoinedAt)
+		if err != nil {
+			joinedAt, err = time.Parse("2006-01-02T15:04:05.000000-07:00", t.JoinedAt)
+			if err != nil {
+
+				memberKey := CacheMemberGuildKey{
+					GuildID: t.GuildID,
+					UserID:  t.UserID,
+				}
+				memberConfI, err := cache.Get(memberKey)
+				if err != nil {
+					log.Warningln("Unknown time format", t.JoinedAt, err)
+					return err
+				}
+				memberConf := memberConfI.(CacheMember)
+				joinedAt, err = time.Parse("2006-01-02 15:04:05", memberConf.JoinedAt)
+			}
+		}
+
+		_, err = cache.cacheStmts.setMember.Exec(t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick, joinedAt.Format("2006-01-02 15:04:05"))
+		if err != nil {
+			log.Warningln("Unable to set member", err)
 		}
 
 	default:

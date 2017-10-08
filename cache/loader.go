@@ -51,7 +51,7 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 		return cacheChannel, nil
 	case CacheRoleKey:
 		var cacheRole CacheRole
-		err = cache.cacheStmts.getChannelByRoleID.QueryRow(t.RoleID, t.GuildID).Scan(&cacheRole.ID, &cacheRole.SID, &cacheRole.RoleID, &cacheRole.SelfAssign, &cacheRole.Name, &cacheRole.GuildID)
+		err = cache.cacheStmts.getRoleByRoleID.QueryRow(t.RoleID, t.GuildID).Scan(&cacheRole.ID, &cacheRole.SID, &cacheRole.RoleID, &cacheRole.SelfAssign, &cacheRole.Name, &cacheRole.GuildID)
 		if err != nil {
 			log.Debugln("Unable to autoload Role", err)
 			return nil, errors.New("unable to autoload")
@@ -63,7 +63,7 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 		return cacheRole, nil
 	case CacheRoleName:
 		var cacheRole CacheRole
-		err = cache.cacheStmts.getChannelByRoleName.QueryRow(t.RoleName, t.GuildID).Scan(&cacheRole.ID, &cacheRole.SID, &cacheRole.RoleID, &cacheRole.SelfAssign, &cacheRole.Name, &cacheRole.GuildID)
+		err = cache.cacheStmts.getRoleByRoleName.QueryRow(t.RoleName, t.GuildID).Scan(&cacheRole.ID, &cacheRole.SID, &cacheRole.RoleID, &cacheRole.SelfAssign, &cacheRole.Name, &cacheRole.GuildID)
 		if err != nil {
 			log.Debugln("Unable to autoload Role", err)
 			return nil, errors.New("unable to autoload")
@@ -97,7 +97,70 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 
 			roles = append(roles, cacheRole)
 		}
-		return roles, nil
+		return roles, err
+	case CacheMemberGuildKey:
+		var cacheMember CacheMember
+
+		err = cache.cacheStmts.getMemberByGuildAndUserID.QueryRow(t.UserID, t.GuildID).Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
+		if err != nil {
+			log.Debugln("Unable to autoload Member", err)
+			return nil, errors.New("unable to autoload")
+		}
+
+		if cache.session != nil {
+			cacheMember.Member, err = cache.session.State.Member(cacheMember.GuildID, cacheMember.UserID)
+		}
+		return cacheMember, nil
+	case CacheMemberKey:
+		rows, err := cache.cacheStmts.getMembersByUserID.Query(t.UserID)
+		defer rows.Close()
+		if err != nil {
+			log.Debugln("Unable to autoload Members", err)
+			return nil, errors.New("unable to autoload")
+		}
+
+		members := []CacheMember{}
+		for rows.Next() {
+			var cacheMember CacheMember
+
+			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
+			if err != nil {
+				log.Debugln("Unable to autoload Member", err)
+				return nil, errors.New("unable to autoload")
+			}
+
+			if cache.session != nil {
+				cacheMember.Member, err = cache.session.State.Member(cacheMember.GuildID, cacheMember.UserID)
+			}
+
+			members = append(members, cacheMember)
+		}
+		return members, err
+	case CacheMembers:
+		rows, err := cache.cacheStmts.getMembers.Query(t.GuildID)
+		defer rows.Close()
+		if err != nil {
+			log.Debugln("Unable to autoload Members", err)
+			return nil, errors.New("unable to autoload")
+		}
+
+		members := []CacheMember{}
+		for rows.Next() {
+			var cacheMember CacheMember
+
+			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
+			if err != nil {
+				log.Debugln("Unable to autoload Member", err)
+				return nil, errors.New("unable to autoload")
+			}
+
+			if cache.session != nil {
+				cacheMember.Member, err = cache.session.State.Member(cacheMember.GuildID, cacheMember.UserID)
+			}
+
+			members = append(members, cacheMember)
+		}
+		return members, err
 	default:
 		return nil, errors.New("unable to autoload")
 

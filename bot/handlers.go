@@ -63,7 +63,7 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 		log.Warningln("Unable to get guild roles", err)
 	}
 	for _, role := range roles {
-		// Check if Server already exists in DB otherwise create new one with default values
+		// Check if role already exists in DB otherwise create new one with default values
 		roleKey := cache.CacheRoleKey{
 			GuildID: event.Guild.ID,
 			RoleID:  role.ID,
@@ -86,7 +86,7 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 		log.Warningln("Unable to get guild channels", err)
 	}
 	for _, channel := range channels {
-		// Check if Server already exists in DB otherwise create new one with default values
+		// Check if channel already exists in DB otherwise create new one with default values
 		channelKey := cache.CacheChannelKey{
 			ChannelID: channel.ID,
 		}
@@ -102,25 +102,51 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 			bot.cache.Set(channelKey, channelValue)
 		}
 	}
+
+	// Get all members and put into cache/db if not already
+	members, err := s.GuildMembers(event.Guild.ID, "", 0)
+	if err != nil {
+		log.Warningln("Unable to get guild members", err)
+	}
+	for _, member := range members {
+		// Check if member already exists in DB otherwise create new one with default values
+		memberKey := cache.CacheMemberGuildKey{
+			GuildID: event.Guild.ID,
+			UserID:  member.User.ID,
+		}
+		_, err := bot.cache.Get(memberKey)
+		if err != nil {
+			memberValue := cache.CacheMember{
+				SID:           serverConf.ID,
+				GuildID:       serverConf.GuildID,
+				UserID:        member.User.ID,
+				Username:      member.User.Username,
+				Discriminator: member.User.Discriminator,
+				Avatar:        member.User.Avatar,
+				Nick:          member.Nick,
+				JoinedAt:      member.JoinedAt,
+			}
+			bot.cache.Set(memberKey, memberValue)
+		}
+	}
 }
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	// Find the channel that the message came from.
-	c, err := s.State.Channel(m.ChannelID)
-	if err != nil {
-		// Could not find channel.
+	if m.Author.Bot {
 		return
 	}
 
-	// Find the guild for that channel.
+	c, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return
+	}
+
 	g, err := s.State.Guild(c.GuildID)
 	if err != nil {
-		// Could not find guild.
 		return
 	}
 
@@ -177,6 +203,35 @@ func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMe
 			newm := append(g.Members, c.Members...)
 			RemoveDuplicateMembers(&newm)
 			g.Members = newm
+
+			serverConf, err := bot.cache.GetServer(g.ID)
+			if err != nil {
+				log.Warningln("Unable to get server", err)
+				break
+			}
+
+			// Get all members and put into cache/db if not already
+			for _, member := range g.Members {
+				// Check if member already exists in DB otherwise create new one with default values
+				memberKey := cache.CacheMemberGuildKey{
+					GuildID: g.ID,
+					UserID:  member.User.ID,
+				}
+				_, err := bot.cache.Get(memberKey)
+				if err != nil {
+					memberValue := cache.CacheMember{
+						SID:           serverConf.ID,
+						GuildID:       g.ID,
+						UserID:        member.User.ID,
+						Username:      member.User.Username,
+						Discriminator: member.User.Discriminator,
+						Avatar:        member.User.Avatar,
+						Nick:          member.Nick,
+						JoinedAt:      member.JoinedAt,
+					}
+					bot.cache.Set(memberKey, memberValue)
+				}
+			}
 			break
 		}
 	}
@@ -184,24 +239,114 @@ func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMe
 
 func (bot *MakaBot) memberAdd(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
 	log.Noteln("User", event.User.Username, "joined.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
+	memberKey := cache.CacheMemberGuildKey{
+		GuildID: event.GuildID,
+		UserID:  event.Member.User.ID,
+	}
+	_, err = bot.cache.Get(memberKey)
+	if err != nil {
+		memberValue := cache.CacheMember{
+			SID:           serverConf.ID,
+			GuildID:       serverConf.GuildID,
+			UserID:        event.Member.User.ID,
+			Username:      event.Member.User.Username,
+			Discriminator: event.Member.User.Discriminator,
+			Avatar:        event.Member.User.Avatar,
+			Nick:          event.Member.Nick,
+			JoinedAt:      event.Member.JoinedAt,
+		}
+		bot.cache.Set(memberKey, memberValue)
+	}
 }
 
 func (bot *MakaBot) memberRemove(s *discordgo.Session, event *discordgo.GuildMemberRemove) {
 	log.Noteln("User", event.User.Username, "removed.")
+	bot.cache.DeleteMember(event.GuildID, event.Member.User.ID)
 }
 
 func (bot *MakaBot) memberUpdate(s *discordgo.Session, event *discordgo.GuildMemberUpdate) {
 	log.Noteln("User", event.User.Username, "updated.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
+	memberKey := cache.CacheMemberGuildKey{
+		GuildID: event.GuildID,
+		UserID:  event.Member.User.ID,
+	}
+	memberConfI, err := bot.cache.Get(memberKey)
+	if err != nil {
+		memberValue := cache.CacheMember{
+			SID:           serverConf.ID,
+			GuildID:       serverConf.GuildID,
+			UserID:        event.Member.User.ID,
+			Username:      event.Member.User.Username,
+			Discriminator: event.Member.User.Discriminator,
+			Avatar:        event.Member.User.Avatar,
+			Nick:          event.Member.Nick,
+			JoinedAt:      event.Member.JoinedAt,
+		}
+		bot.cache.Set(memberKey, memberValue)
+		return
+	}
+	memberConf := memberConfI.(cache.CacheMember)
+	memberConf.Username = event.Member.User.Username
+	memberConf.Discriminator = event.Member.User.Discriminator
+	memberConf.Avatar = event.Member.User.Avatar
+	memberConf.Nick = event.Member.Nick
+	memberConf.JoinedAt = event.Member.JoinedAt
+	bot.cache.Set(memberKey, memberConf)
+}
+
+func (bot *MakaBot) roleCreate(s *discordgo.Session, event *discordgo.GuildRoleCreate) {
+	log.Noteln("Role", event.Role.Name, "created.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
+	roleKey := cache.CacheRoleKey{
+		GuildID: event.GuildID,
+		RoleID:  event.Role.ID,
+	}
+	_, err = bot.cache.Get(roleKey)
+	if err != nil {
+		roleValue := cache.CacheRole{
+			SID:     serverConf.ID,
+			GuildID: serverConf.GuildID,
+			RoleID:  event.Role.ID,
+			Name:    event.Role.Name,
+		}
+		bot.cache.Set(roleKey, roleValue)
+	}
 }
 
 func (bot *MakaBot) roleUpdate(s *discordgo.Session, event *discordgo.GuildRoleUpdate) {
 	log.Noteln("Role", event.Role.Name, "updated.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
 	roleKey := cache.CacheRoleKey{
 		GuildID: event.GuildID,
 		RoleID:  event.Role.ID,
 	}
 	roleConfI, err := bot.cache.Get(roleKey)
 	if err != nil {
+		roleValue := cache.CacheRole{
+			SID:     serverConf.ID,
+			GuildID: serverConf.GuildID,
+			RoleID:  event.Role.ID,
+			Name:    event.Role.Name,
+		}
+		bot.cache.Set(roleKey, roleValue)
 		return
 	}
 	roleConf := roleConfI.(cache.CacheRole)
@@ -214,13 +359,49 @@ func (bot *MakaBot) roleDelete(s *discordgo.Session, event *discordgo.GuildRoleD
 	bot.cache.DeleteRole(event.GuildID, event.RoleID)
 }
 
+func (bot *MakaBot) channelCreate(s *discordgo.Session, event *discordgo.ChannelCreate) {
+	log.Noteln("Channel", event.Name, "creates.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
+	channelKey := cache.CacheChannelKey{
+		ChannelID: event.ID,
+	}
+	_, err = bot.cache.Get(channelKey)
+	if err != nil {
+		channelValue := cache.CacheChannel{
+			SID:       serverConf.ID,
+			GuildID:   serverConf.GuildID,
+			ChannelID: event.ID,
+			Name:      event.Name,
+			CType:     int(event.Type),
+		}
+		bot.cache.Set(channelKey, channelValue)
+	}
+}
+
 func (bot *MakaBot) channelUpdate(s *discordgo.Session, event *discordgo.ChannelUpdate) {
 	log.Noteln("Channel", event.Name, "updated.")
+	serverConf, err := bot.cache.GetServer(event.GuildID)
+	if err != nil {
+		log.Warningln("Unable to get server", err)
+	}
+
 	channelKey := cache.CacheChannelKey{
 		ChannelID: event.ID,
 	}
 	channelConfI, err := bot.cache.Get(channelKey)
 	if err != nil {
+		channelValue := cache.CacheChannel{
+			SID:       serverConf.ID,
+			GuildID:   serverConf.GuildID,
+			ChannelID: event.ID,
+			Name:      event.Name,
+			CType:     int(event.Type),
+		}
+		bot.cache.Set(channelKey, channelValue)
 		return
 	}
 	channelConf := channelConfI.(cache.CacheChannel)
