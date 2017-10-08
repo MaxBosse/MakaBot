@@ -62,3 +62,28 @@ type CacheChannel struct {
 	CType      int
 	Channel    *discordgo.Channel
 }
+
+type CacheMembers struct {
+	GuildID string
+}
+
+type CacheMemberKey struct {
+	UserID string
+}
+
+type CacheMemberGuildKey struct {
+	GuildID string
+	UserID  string
+}
+
+type CacheMember struct {
+	ID            string
+	SID           string
+	GuildID       string
+	UserID        string
+	Username      string
+	Discriminator string
+	Avatar        string
+	Nick          string
+	Member        *discordgo.Member
+}

@@ -9,23 +9,38 @@ import (
 )
 
 type cacheStmts struct {
-	setServer               *sql.Stmt
-	setChannel              *sql.Stmt
-	setRole                 *sql.Stmt
-	getServersByGuildID     *sql.Stmt
-	getChannelByChannelID   *sql.Stmt
-	getChannelByChannelName *sql.Stmt
-	getChannelByRoleID      *sql.Stmt
-	getChannelByRoleName    *sql.Stmt
-	getRoles                *sql.Stmt
-	removeServer            *sql.Stmt
-	removeChannel           *sql.Stmt
-	removeRole              *sql.Stmt
+	setServer                 *sql.Stmt
+	setChannel                *sql.Stmt
+	setRole                   *sql.Stmt
+	setMember                 *sql.Stmt
+	getServersByGuildID       *sql.Stmt
+	getChannelByChannelID     *sql.Stmt
+	getChannelByChannelName   *sql.Stmt
+	getRoleByRoleID           *sql.Stmt
+	getRoleByRoleName         *sql.Stmt
+	getRoles                  *sql.Stmt
+	getMembersByUserID        *sql.Stmt
+	getMemberByGuildAndUserID *sql.Stmt
+	getMembers                *sql.Stmt
+	removeServer              *sql.Stmt
+	removeChannel             *sql.Stmt
+	removeRole                *sql.Stmt
+	removeMember              *sql.Stmt
 }
 
 func (cache *Cache) prepareStatements() *cacheStmts {
 	var stmts cacheStmts
 	var err error
+
+	stmts.removeMember, err = cache.db.Prepare(
+		"DELETE " +
+			"FROM " +
+			"	members " +
+			"WHERE " +
+			"	members.id = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement removeMember.", err.Error())
+	}
 
 	stmts.removeRole, err = cache.db.Prepare(
 		"DELETE " +
@@ -55,24 +70,6 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 			"	servers.id = ? ")
 	if err != nil {
 		log.Fatalln("Could not prepare statement removeServer.", err.Error())
-	}
-
-	stmts.getRoles, err = cache.db.Prepare(
-		"SELECT " +
-			"	roles.id, " +
-			"	roles.sID, " +
-			"	roles.roleID, " +
-			"	roles.selfAssign, " +
-			"	roles.name, " +
-			"	servers.guildID " +
-			"FROM " +
-			"	roles " +
-			"LEFT JOIN servers " +
-			"	ON roles.sID = servers.id " +
-			"WHERE " +
-			"	servers.guildID = ? ")
-	if err != nil {
-		log.Fatalln("Could not prepare statement getRoles.", err.Error())
 	}
 
 	stmts.setServer, err = cache.db.Prepare(
@@ -113,6 +110,20 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 			"	name=VALUES(name) ")
 	if err != nil {
 		log.Fatalln("Could not prepare statement setRole.", err.Error())
+	}
+
+	stmts.setMember, err = cache.db.Prepare(
+		"INSERT INTO members " +
+			"	(sID, userID, username, discriminator, avatar, nick) " +
+			"VALUES " +
+			"	(?, ?, ?, ?, ?, ?) " +
+			"ON DUPLICATE KEY UPDATE " +
+			"	username=VALUES(username), " +
+			"	discriminator=VALUES(discriminator), " +
+			"	avatar=VALUES(avatar), " +
+			"	nick=VALUES(nick) ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement setMember.", err.Error())
 	}
 
 	stmts.getServersByGuildID, err = cache.db.Prepare(
@@ -171,7 +182,25 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 		log.Fatalln("Could not prepare statement getChannelByChannelName.", err.Error())
 	}
 
-	stmts.getChannelByRoleID, err = cache.db.Prepare(
+	stmts.getRoles, err = cache.db.Prepare(
+		"SELECT " +
+			"	roles.id, " +
+			"	roles.sID, " +
+			"	roles.roleID, " +
+			"	roles.selfAssign, " +
+			"	roles.name, " +
+			"	servers.guildID " +
+			"FROM " +
+			"	roles " +
+			"LEFT JOIN servers " +
+			"	ON roles.sID = servers.id " +
+			"WHERE " +
+			"	servers.guildID = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement getRoles.", err.Error())
+	}
+
+	stmts.getRoleByRoleID, err = cache.db.Prepare(
 		"SELECT " +
 			"	roles.id, " +
 			"	roles.sID, " +
@@ -187,10 +216,10 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 			"	roles.roleID = ? " +
 			"	AND servers.guildID = ? ")
 	if err != nil {
-		log.Fatalln("Could not prepare statement getChannelByRoleID.", err.Error())
+		log.Fatalln("Could not prepare statement getRoleByRoleID.", err.Error())
 	}
 
-	stmts.getChannelByRoleName, err = cache.db.Prepare(
+	stmts.getRoleByRoleName, err = cache.db.Prepare(
 		"SELECT " +
 			"	roles.id, " +
 			"	roles.sID, " +
@@ -207,6 +236,67 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 			"	AND servers.guildID = ? ")
 	if err != nil {
 		log.Fatalln("Could not prepare statement getChannelByRoleName.", err.Error())
+	}
+
+	stmts.getMembers, err = cache.db.Prepare(
+		"SELECT " +
+			"	members.id, " +
+			"	members.sID, " +
+			"	members.userID, " +
+			"	members.username, " +
+			"	members.discriminator, " +
+			"	members.avatar, " +
+			"	members.nick, " +
+			"	servers.guildID " +
+			"FROM " +
+			"	members " +
+			"LEFT JOIN servers " +
+			"	ON members.sID = servers.id " +
+			"WHERE " +
+			"	servers.guildID = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement getMembers.", err.Error())
+	}
+
+	stmts.getMembersByUserID, err = cache.db.Prepare(
+		"SELECT " +
+			"	members.id, " +
+			"	members.sID, " +
+			"	members.userID, " +
+			"	members.username, " +
+			"	members.discriminator, " +
+			"	members.avatar, " +
+			"	members.nick, " +
+			"	servers.guildID " +
+			"FROM " +
+			"	members " +
+			"LEFT JOIN servers " +
+			"	ON members.sID = servers.id " +
+			"WHERE " +
+			"	members.userID = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement getMembersByUserID.", err.Error())
+	}
+
+	stmts.getMemberByGuildAndUserID, err = cache.db.Prepare(
+		"SELECT " +
+			"	members.id, " +
+			"	members.sID, " +
+			"	members.userID, " +
+			"	members.username, " +
+			"	members.discriminator, " +
+			"	members.avatar, " +
+			"	members.nick, " +
+			"	servers.guildID " +
+			"FROM " +
+			"	members " +
+			"LEFT JOIN servers " +
+			"	ON members.sID = servers.id " +
+			"WHERE " +
+			"	members.userID = ? " +
+			"	AND servers.guildID = ? ")
+	if err != nil {
+		log.Fatalln("Could not prepare statement getMemberByGuildAndUserID.", err.Error())
 	}
 
 	return &stmts

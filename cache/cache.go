@@ -39,6 +39,28 @@ func (cache *Cache) UpdateSession(s *discordgo.Session) {
 	cache.session = s
 }
 
+func (cache *Cache) DeleteMember(gID, uID string) error {
+	value := CacheMember{}
+	key := CacheMemberGuildKey{
+		GuildID: gID,
+		UserID:  uID,
+	}
+	valueI, err := cache.Get(key)
+	if err != nil {
+		return nil
+	}
+	value = valueI.(CacheMember)
+
+	_, err = cache.cacheStmts.removeMember.Exec(value.ID)
+	if err != nil {
+		log.Warningln("Unable to remove member", err)
+	}
+
+	(*cache.gcache).Remove(key)
+
+	return err
+}
+
 func (cache *Cache) DeleteRole(gID, rID string) error {
 	value := CacheRole{}
 	key := CacheRoleKey{
@@ -84,6 +106,46 @@ func (cache *Cache) DeleteChannel(cID string) error {
 	(*cache.gcache).Remove(key)
 
 	return err
+}
+
+func (cache *Cache) GetMembers(gID string) ([]CacheMember, error) {
+	value := []CacheMember{}
+	key := CacheMembers{
+		GuildID: gID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.([]CacheMember)
+	}
+
+	return value, err
+}
+
+func (cache *Cache) GetMemberships(uID string) ([]CacheMember, error) {
+	value := []CacheMember{}
+	key := CacheMemberKey{
+		UserID: uID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.([]CacheMember)
+	}
+
+	return value, err
+}
+
+func (cache *Cache) GetMember(gID, uID string) (CacheMember, error) {
+	value := CacheMember{}
+	key := CacheMemberGuildKey{
+		GuildID: gID,
+		UserID:  uID,
+	}
+	valueI, err := cache.Get(key)
+	if err == nil {
+		value = valueI.(CacheMember)
+	}
+
+	return value, err
 }
 
 func (cache *Cache) GetRoles(gID string) ([]CacheRole, error) {
@@ -188,7 +250,12 @@ func (cache *Cache) Set(key interface{}, value interface{}) error {
 	case CacheRole:
 		_, err = cache.cacheStmts.setRole.Exec(t.SID, t.RoleID, t.SelfAssign, t.Name)
 		if err != nil {
-			log.Warningln("Unable to set channel", err)
+			log.Warningln("Unable to set role", err)
+		}
+	case CacheMember:
+		_, err = cache.cacheStmts.setMember.Exec(t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick)
+		if err != nil {
+			log.Warningln("Unable to set member", err)
 		}
 
 	default:
