@@ -2,6 +2,7 @@ package cache
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/MaxBosse/MakaBot/log"
 	"github.com/MaxBosse/MakaBot/utils"
@@ -253,7 +254,28 @@ func (cache *Cache) Set(key interface{}, value interface{}) error {
 			log.Warningln("Unable to set role", err)
 		}
 	case CacheMember:
-		_, err = cache.cacheStmts.setMember.Exec(t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick)
+		log.Debugln("Setting Member", t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick, t.JoinedAt)
+
+		joinedAt, err := time.Parse("2006-01-02T15:04:05-07:00", t.JoinedAt)
+		if err != nil {
+			joinedAt, err = time.Parse("2006-01-02T15:04:05.000000-07:00", t.JoinedAt)
+			if err != nil {
+
+				memberKey := CacheMemberGuildKey{
+					GuildID: t.GuildID,
+					UserID:  t.UserID,
+				}
+				memberConfI, err := cache.Get(memberKey)
+				if err != nil {
+					log.Warningln("Unknown time format", t.JoinedAt, err)
+					return err
+				}
+				memberConf := memberConfI.(CacheMember)
+				joinedAt, err = time.Parse("2006-01-02 15:04:05", memberConf.JoinedAt)
+			}
+		}
+
+		_, err = cache.cacheStmts.setMember.Exec(t.SID, t.UserID, t.Username, t.Discriminator, t.Avatar, t.Nick, joinedAt.Format("2006-01-02 15:04:05"))
 		if err != nil {
 			log.Warningln("Unable to set member", err)
 		}

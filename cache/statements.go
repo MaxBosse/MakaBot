@@ -116,7 +116,7 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 		"INSERT INTO members " +
 			"	(sID, userID, username, discriminator, avatar, nick, joinedAt) " +
 			"VALUES " +
-			"	(?, ?, ?, ?, ?, ?, DATE_FORMAT(STR_TO_DATE(?,'%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s')) " +
+			"	(?, ?, ?, ?, ?, ?, DATE_FORMAT(?,'%Y-%m-%d %H:%i:%s') ) " +
 			"ON DUPLICATE KEY UPDATE " +
 			"	username=VALUES(username), " +
 			"	discriminator=VALUES(discriminator), " +
