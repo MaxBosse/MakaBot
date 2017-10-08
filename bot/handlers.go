@@ -183,14 +183,60 @@ func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMe
 
 func (bot *MakaBot) memberAdd(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
 	log.Noteln("User", event.User.Username, "joined.")
+	memberKey := cache.CacheMemberGuildKey{
+		GuildID: event.GuildID,
+		UserID:  event.Member.User.ID,
+	}
+	memberConfI, err := bot.cache.Get(memberKey)
+	if err != nil {
+		return
+	}
+	memberConf := memberConfI.(cache.CacheMember)
+	memberConf.Username = event.Member.User.Username
+	memberConf.Discriminator = event.Member.User.Discriminator
+	memberConf.Avatar = event.Member.User.Avatar
+	memberConf.Nick = event.Member.Nick
+	memberConf.JoinedAt = event.Member.JoinedAt
+	bot.cache.Set(memberKey, memberConf)
 }
 
 func (bot *MakaBot) memberRemove(s *discordgo.Session, event *discordgo.GuildMemberRemove) {
 	log.Noteln("User", event.User.Username, "removed.")
+	bot.cache.DeleteMember(event.GuildID, event.Member.User.ID)
 }
 
 func (bot *MakaBot) memberUpdate(s *discordgo.Session, event *discordgo.GuildMemberUpdate) {
 	log.Noteln("User", event.User.Username, "updated.")
+	memberKey := cache.CacheMemberGuildKey{
+		GuildID: event.GuildID,
+		UserID:  event.Member.User.ID,
+	}
+	memberConfI, err := bot.cache.Get(memberKey)
+	if err != nil {
+		return
+	}
+	memberConf := memberConfI.(cache.CacheMember)
+	memberConf.Username = event.Member.User.Username
+	memberConf.Discriminator = event.Member.User.Discriminator
+	memberConf.Avatar = event.Member.User.Avatar
+	memberConf.Nick = event.Member.Nick
+	memberConf.JoinedAt = event.Member.JoinedAt
+	bot.cache.Set(memberKey, memberConf)
+}
+
+func (bot *MakaBot) roleCreate(s *discordgo.Session, event *discordgo.GuildRoleCreate) {
+	log.Noteln("Role", event.Role.Name, "created.")
+	roleKey := cache.CacheRoleKey{
+		GuildID: event.GuildID,
+		RoleID:  event.Role.ID,
+	}
+	roleConfI, err := bot.cache.Get(roleKey)
+	if err != nil {
+		return
+	}
+	roleConf := roleConfI.(cache.CacheRole)
+	roleConf.Name = event.Role.Name
+	bot.cache.Set(roleKey, roleConf)
 }
 
 func (bot *MakaBot) roleUpdate(s *discordgo.Session, event *discordgo.GuildRoleUpdate) {
@@ -211,6 +257,21 @@ func (bot *MakaBot) roleUpdate(s *discordgo.Session, event *discordgo.GuildRoleU
 func (bot *MakaBot) roleDelete(s *discordgo.Session, event *discordgo.GuildRoleDelete) {
 	log.Noteln("Role", event.RoleID, "removed.")
 	bot.cache.DeleteRole(event.GuildID, event.RoleID)
+}
+
+func (bot *MakaBot) channelCreate(s *discordgo.Session, event *discordgo.ChannelCreate) {
+	log.Noteln("Channel", event.Name, "creates.")
+	channelKey := cache.CacheChannelKey{
+		ChannelID: event.ID,
+	}
+	channelConfI, err := bot.cache.Get(channelKey)
+	if err != nil {
+		return
+	}
+	channelConf := channelConfI.(cache.CacheChannel)
+	channelConf.Name = event.Name
+	channelConf.CType = int(event.Type)
+	bot.cache.Set(channelKey, channelConf)
 }
 
 func (bot *MakaBot) channelUpdate(s *discordgo.Session, event *discordgo.ChannelUpdate) {
