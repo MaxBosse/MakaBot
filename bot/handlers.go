@@ -105,22 +105,21 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 }
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	// Find the channel that the message came from.
-	c, err := s.State.Channel(m.ChannelID)
-	if err != nil {
-		// Could not find channel.
+	if m.Author.Bot {
 		return
 	}
 
-	// Find the guild for that channel.
+	c, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return
+	}
+
 	g, err := s.State.Guild(c.GuildID)
 	if err != nil {
-		// Could not find guild.
 		return
 	}
 
