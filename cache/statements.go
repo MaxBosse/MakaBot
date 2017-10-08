@@ -74,15 +74,14 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 
 	stmts.setServer, err = cache.db.Prepare(
 		"INSERT INTO servers " +
-			"	(guildID, enabled, nickname, prefix, name, joinedAt) " +
+			"	(guildID, enabled, nickname, prefix, name) " +
 			"VALUES " +
-			"	(?, ?, ?, ?, ?, DATE_FORMAT(STR_TO_DATE(?,'%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s')) " +
+			"	(?, ?, ?, ?, ?)" +
 			"ON DUPLICATE KEY UPDATE " +
 			"	enabled=VALUES(enabled), " +
 			"	nickname=VALUES(nickname), " +
 			"	prefix=VALUES(prefix), " +
-			"	name=VALUES(name), " +
-			"	joinedAt=VALUES(joinedAt) ")
+			"	name=VALUES(name) ")
 	if err != nil {
 		log.Fatalln("Could not prepare statement setServer.", err.Error())
 	}
@@ -115,14 +114,15 @@ func (cache *Cache) prepareStatements() *cacheStmts {
 
 	stmts.setMember, err = cache.db.Prepare(
 		"INSERT INTO members " +
-			"	(sID, userID, username, discriminator, avatar, nick) " +
+			"	(sID, userID, username, discriminator, avatar, nick, joinedAt) " +
 			"VALUES " +
-			"	(?, ?, ?, ?, ?, ?) " +
+			"	(?, ?, ?, ?, ?, ?, DATE_FORMAT(STR_TO_DATE(?,'%Y-%m-%dT%H:%i:%s.000Z'),'%Y-%m-%d %H:%i:%s')) " +
 			"ON DUPLICATE KEY UPDATE " +
 			"	username=VALUES(username), " +
 			"	discriminator=VALUES(discriminator), " +
 			"	avatar=VALUES(avatar), " +
-			"	nick=VALUES(nick) ")
+			"	nick=VALUES(nick), " +
+			"	joinedAt=VALUES(joinedAt) ")
 	if err != nil {
 		log.Fatalln("Could not prepare statement setMember.", err.Error())
 	}
