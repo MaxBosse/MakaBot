@@ -102,22 +102,6 @@ func (bot *MakaBot) guildCreate(s *discordgo.Session, event *discordgo.GuildCrea
 			bot.cache.Set(channelKey, channelValue)
 		}
 	}
-
-	// METRIC COLLECTION
-	// Stop ticker if already running to start with new session
-	if _, ok := bot.tickers["guildTicker_"+event.Guild.ID]; ok {
-		bot.tickers["guildTicker_"+event.Guild.ID].Stop()
-	}
-
-	guild, _ := s.Guild(event.Guild.ID)
-	bot.CollectGuildMetrics(s, guild)
-	bot.tickers["guildTicker_"+event.Guild.ID] = time.NewTicker(time.Second * 10)
-	go func() {
-		for range bot.tickers["guildTicker_"+event.Guild.ID].C {
-			bot.CollectGuildMetrics(s, guild)
-		}
-	}()
-	// END METRIC COLLECTION
 }
 
 func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {

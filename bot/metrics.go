@@ -12,6 +12,8 @@ func (bot *MakaBot) CollectGlobalGuildMetrics(s *discordgo.Session) {
 	totalMembers := 0
 
 	for _, g := range s.State.Guilds {
+		go bot.CollectGuildMetrics(s, g)
+
 		for _, member := range g.Members {
 			for _, role := range member.Roles {
 				_, ok := rolesStruct[role]
