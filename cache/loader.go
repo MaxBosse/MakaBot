@@ -101,7 +101,7 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 	case CacheMemberGuildKey:
 		var cacheMember CacheMember
 
-		err = cache.cacheStmts.getMembers.QueryRow(t.UserID, t.GuildID).Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.GuildID)
+		err = cache.cacheStmts.getMembers.QueryRow(t.UserID, t.GuildID).Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
 		if err != nil {
 			log.Debugln("Unable to autoload Member", err)
 			return nil, errors.New("unable to autoload")
@@ -123,7 +123,7 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 		for rows.Next() {
 			var cacheMember CacheMember
 
-			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.GuildID)
+			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
 			if err != nil {
 				log.Debugln("Unable to autoload Member", err)
 				return nil, errors.New("unable to autoload")
@@ -148,7 +148,7 @@ func (cache *Cache) loader(key interface{}) (interface{}, error) {
 		for rows.Next() {
 			var cacheMember CacheMember
 
-			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.GuildID)
+			err = rows.Scan(&cacheMember.ID, &cacheMember.SID, &cacheMember.UserID, &cacheMember.Username, &cacheMember.Discriminator, &cacheMember.Avatar, &cacheMember.Nick, &cacheMember.JoinedAt, &cacheMember.GuildID)
 			if err != nil {
 				log.Debugln("Unable to autoload Member", err)
 				return nil, errors.New("unable to autoload")

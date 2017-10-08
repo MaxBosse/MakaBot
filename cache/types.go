@@ -85,5 +85,6 @@ type CacheMember struct {
 	Discriminator string
 	Avatar        string
 	Nick          string
+	JoinedAt      string
 	Member        *discordgo.Member
 }
