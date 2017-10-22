@@ -1,39 +1,13 @@
 influx:
   host: "http://127.0.0.1:8086"
-  database: "gameBackend"
+  database: "database"
   user: ""
   password: ""
 mysql:
-  host: "127.0.0.1"
-  database: "db"
-  user: "user"
-  password: "pass"
-discordtoken: ""
-servers:
-  - guildid: "354722723353853962"
-    nickname: "TestBot"
-    prefix: "!"
-    botchannels:
-    - general
-    roles:
-      "354723230159994882":
-        rolename: "new role"
-        attributes:
-          Test2-Attribute: "bla"
-          "Testin2": "foo"
-      "354723234475671553":
-        rolename: "new roles"
-        attributes:
-          Test2-Attribute: "bla"
-          "foo": "bar"
-    attributes:
-      Test-Attribute: "Test"
-      Bla: "Test"
-
-  - guildid: "329078443687936001"
-    nickname: "MakaBot"
-    prefix: "!"
-    roles:
-    attributes:
-      Test-Attribute: "Test"
-      Bla: "Test"
+  host: "127.0.0.1:3306"
+  database: "bot"
+  user: "bot"
+  password: "secret"
+discordtoken: "supersecret"
+webbind: "0.0.0.0:8080"
+cookiesecret: "ChangeMe!"
