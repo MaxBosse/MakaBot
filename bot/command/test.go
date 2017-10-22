@@ -1,6 +1,9 @@
 package command
 
-import "github.com/MaxBosse/MakaBot/log"
+import (
+	"github.com/MaxBosse/MakaBot/log"
+	"github.com/bwmarrin/discordgo"
+)
 
 type Test struct {
 	subCommands map[string]Command
@@ -38,6 +41,10 @@ func (t *Test) Parent() Command {
 
 func (t *Test) SetParent(cmd Command) {
 	t.parent = cmd
+}
+
+func (t *Test) Event(c *Context, event *discordgo.Event) {
+	return
 }
 
 func (t *Test) Message(c *Context) {

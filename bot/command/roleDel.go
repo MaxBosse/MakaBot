@@ -5,6 +5,7 @@ import (
 
 	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
+	"github.com/bwmarrin/discordgo"
 )
 
 type RoleDel struct {
@@ -33,6 +34,10 @@ func (t *RoleDel) Parent() Command {
 
 func (t *RoleDel) SetParent(cmd Command) {
 	t.parent = cmd
+}
+
+func (t *RoleDel) Event(c *Context, event *discordgo.Event) {
+	return
 }
 
 func (t *RoleDel) Message(c *Context) {

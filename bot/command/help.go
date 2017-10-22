@@ -40,6 +40,10 @@ func (t *Help) SetParent(cmd Command) {
 	t.parent = cmd
 }
 
+func (t *Help) Event(c *Context, event *discordgo.Event) {
+	return
+}
+
 func (t *Help) Message(c *Context) {
 	log.Debugln(t.Name() + " called")
 	if handleSubCommands(c, t) {

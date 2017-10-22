@@ -189,10 +189,10 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 			return
 		}
 
-		_, err = s.ChannelMessageSend(c.ID, "Unknown function.")
+		/*_, err = s.ChannelMessageSend(c.ID, "Unknown function.")
 		if err != nil {
 			log.Errorln(err)
-		}
+		}*/
 		return
 	}
 }
@@ -438,6 +438,15 @@ func (bot *MakaBot) guildUpdate(s *discordgo.Session, event *discordgo.GuildUpda
 func (bot *MakaBot) event(s *discordgo.Session, event *discordgo.Event) {
 	log.Debugln("Event " + event.Type + " called.")
 	bot.CollectGenericGlobalEventMetric(event)
+
+	context := new(command.Context)
+	context.Session = s
+	context.Cache = bot.cache
+
+	// Send event to functions
+	for cmd := range command.Commands {
+		command.Commands[cmd].Event(context, event)
+	}
 
 	switch t := event.Struct.(type) {
 	case *discordgo.Ready:

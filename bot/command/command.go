@@ -58,6 +58,7 @@ type Command interface {
 	SubCommands() map[string]Command
 	Parent() Command
 	SetParent(Command)
+	Event(*Context, *discordgo.Event)
 }
 
 func init() {

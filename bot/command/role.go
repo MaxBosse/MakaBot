@@ -3,6 +3,7 @@ package command
 import (
 	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
+	"github.com/bwmarrin/discordgo"
 )
 
 type Role struct {
@@ -43,6 +44,10 @@ func (t *Role) Parent() Command {
 
 func (t *Role) SetParent(cmd Command) {
 	t.parent = cmd
+}
+
+func (t *Role) Event(c *Context, event *discordgo.Event) {
+	return
 }
 
 func (t *Role) Message(c *Context) {

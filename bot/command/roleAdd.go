@@ -5,6 +5,7 @@ import (
 
 	"github.com/MaxBosse/MakaBot/cache"
 	"github.com/MaxBosse/MakaBot/log"
+	"github.com/bwmarrin/discordgo"
 )
 
 type RoleAdd struct {
@@ -33,6 +34,10 @@ func (t *RoleAdd) Parent() Command {
 
 func (t *RoleAdd) SetParent(cmd Command) {
 	t.parent = cmd
+}
+
+func (t *RoleAdd) Event(c *Context, event *discordgo.Event) {
+	return
 }
 
 func (t *RoleAdd) Message(c *Context) {
