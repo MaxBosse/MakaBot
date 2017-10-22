@@ -48,7 +48,7 @@ func (t *MusicSkip) Message(c *Context) {
 		if vs.UserID == c.Message.Author.ID {
 
 			music := t.parent.(*Music)
-			music.MusicRuntimes[vs.ChannelID].Skip <- true
+			music.MusicRuntimes[c.Guild.ID].Skip <- true
 
 			c.Send("Skipped the song.")
 			return

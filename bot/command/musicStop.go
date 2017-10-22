@@ -48,7 +48,7 @@ func (t *MusicStop) Message(c *Context) {
 		if vs.UserID == c.Message.Author.ID {
 
 			music := t.parent.(*Music)
-			music.MusicRuntimes[vs.ChannelID].Stop <- true
+			music.MusicRuntimes[c.Guild.ID].Stop <- true
 
 			c.Send("Stopped playing.")
 			return

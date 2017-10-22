@@ -30,6 +30,7 @@ type musicHandler struct {
 	Done      chan error
 	ChannelID string
 	Playing   bool
+	Connected bool
 	Stop      chan bool
 	Skip      chan bool
 }
@@ -109,22 +110,23 @@ func (t *Music) initMusicQueue(c *Context, g *discordgo.Guild) {
 	t.MusicGuilds[g.ID] = make(chan *musicChan, 5)
 	t.musicGuildsMutex.Unlock()
 
-	for mC := range t.MusicGuilds[g.ID] {
-		if _, ok := t.MusicRuntimes[mC.channelID]; ok {
-			t.MusicRuntimes[mC.channelID].Queue = append(t.MusicRuntimes[mC.channelID].Queue, mC.videoInfo)
-			log.Noteln("Songs in queue:", len(t.MusicRuntimes[mC.channelID].Queue))
-			continue
-		}
+	t.MusicRuntimes[g.ID] = &musicHandler{
+		ChannelID: "",
+		Done:      make(chan error),
+		Skip:      make(chan bool, 1),
+		Stop:      make(chan bool, 1),
+		Connected: false,
+		Playing:   false,
+	}
 
-		t.MusicRuntimes[mC.channelID] = &musicHandler{
-			ChannelID: mC.channelID,
-			Done:      make(chan error),
-			Skip:      make(chan bool, 1),
-			Stop:      make(chan bool, 1),
-			Playing:   false,
+	for mC := range t.MusicGuilds[g.ID] {
+		t.MusicRuntimes[g.ID].Queue = append(t.MusicRuntimes[g.ID].Queue, mC.videoInfo)
+		log.Debugln("Queue Lenght:", len(t.MusicRuntimes[g.ID].Queue))
+
+		if !t.MusicRuntimes[g.ID].Connected {
+			t.MusicRuntimes[g.ID].ChannelID = mC.channelID
+			go t.musicQueue(c, g, t.MusicRuntimes[g.ID])
 		}
-		t.MusicRuntimes[mC.channelID].Queue = append(t.MusicRuntimes[mC.channelID].Queue, mC.videoInfo)
-		go t.musicQueue(c, g, t.MusicRuntimes[mC.channelID])
 	}
 }
 
@@ -135,6 +137,8 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 	if err != nil {
 		log.Errorln(err)
 	}
+
+	mH.Connected = true
 
 	timeout := time.NewTimer(time.Minute)
 	for {
@@ -155,6 +159,7 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 				videoURL, err := currentSong.GetDownloadURL(format)
 				if err != nil {
 					log.Errorln(err)
+					mH.Connected = false
 					return
 				}
 
@@ -168,6 +173,7 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 				encSesh, err := dca.EncodeFile(videoURL.String(), options)
 				if err != nil {
 					log.Errorln(err)
+					mH.Connected = false
 					return
 				}
 				defer encSesh.Cleanup()
@@ -184,6 +190,7 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 					log.Noteln("Stopped song")
 					mH.Playing = false
 					vc.Disconnect()
+					mH.Connected = false
 					return
 				case <-mH.Skip:
 					encSesh.Cleanup()
@@ -197,6 +204,7 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 			} else {
 				log.Noteln("No more songs in queue.")
 				vc.Disconnect()
+				mH.Connected = false
 				return
 			}
 		}
