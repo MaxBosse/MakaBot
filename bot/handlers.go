@@ -200,6 +200,9 @@ func (bot *MakaBot) messageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 func (bot *MakaBot) guildMembersChunk(s *discordgo.Session, c *discordgo.GuildMembersChunk) {
 	for _, g := range s.State.Guilds {
 		if g.ID == c.GuildID {
+			bot.guildMembersChunkMutex[g.ID].Lock()
+			defer bot.guildMembersChunkMutex[g.ID].Unlock()
+
 			newm := append(g.Members, c.Members...)
 			RemoveDuplicateMembers(&newm)
 			g.Members = newm

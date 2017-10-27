@@ -103,12 +103,13 @@ func (t *Music) Message(c *Context) {
 
 func (t *Music) initMusicQueue(c *Context, g *discordgo.Guild) {
 	t.musicGuildsMutex.Lock()
+	defer t.musicGuildsMutex.Unlock()
+
 	if _, ok := t.MusicGuilds[g.ID]; ok {
 		close(t.MusicGuilds[g.ID])
 	}
 
 	t.MusicGuilds[g.ID] = make(chan *musicChan, 5)
-	t.musicGuildsMutex.Unlock()
 
 	t.MusicRuntimes[g.ID] = &musicHandler{
 		ChannelID: "",
@@ -118,6 +119,7 @@ func (t *Music) initMusicQueue(c *Context, g *discordgo.Guild) {
 		Connected: false,
 		Playing:   false,
 	}
+	t.musicGuildsMutex.Unlock()
 
 	for mC := range t.MusicGuilds[g.ID] {
 		t.MusicRuntimes[g.ID].Queue = append(t.MusicRuntimes[g.ID].Queue, mC.videoInfo)
@@ -137,6 +139,7 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 	if err != nil {
 		log.Errorln(err)
 	}
+	defer vc.Disconnect()
 
 	mH.Connected = true
 
@@ -146,7 +149,6 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 		select {
 		case <-timeout.C:
 			log.Noteln("Got timeout, disconnecting")
-			vc.Disconnect()
 			return
 		default:
 			if len(mH.Queue) > 0 {
@@ -189,7 +191,6 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 				case <-mH.Stop:
 					log.Noteln("Stopped song")
 					mH.Playing = false
-					vc.Disconnect()
 					mH.Connected = false
 					return
 				case <-mH.Skip:
@@ -203,7 +204,6 @@ func (t *Music) musicQueue(c *Context, g *discordgo.Guild, mH *musicHandler) {
 				timeout = time.NewTimer(time.Minute)
 			} else {
 				log.Noteln("No more songs in queue.")
-				vc.Disconnect()
 				mH.Connected = false
 				return
 			}

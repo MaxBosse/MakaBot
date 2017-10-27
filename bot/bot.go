@@ -3,6 +3,7 @@ package bot
 import (
 	"database/sql"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/MaxBosse/MakaBot/cache"
@@ -14,12 +15,13 @@ import (
 )
 
 type MakaBot struct {
-	dg          *discordgo.Session
-	iDB         *utils.InfluxDB
-	db          *sql.DB
-	regexUserID *regexp.Regexp
-	cache       *cache.Cache
-	tickers     map[string]*time.Ticker
+	dg                     *discordgo.Session
+	iDB                    *utils.InfluxDB
+	db                     *sql.DB
+	regexUserID            *regexp.Regexp
+	cache                  *cache.Cache
+	tickers                map[string]*time.Ticker
+	guildMembersChunkMutex map[string]*sync.Mutex
 }
 
 func NewMakaBot(discordToken string, metrics *utils.InfluxDB, db *sql.DB, cache *cache.Cache) *MakaBot {
@@ -30,6 +32,7 @@ func NewMakaBot(discordToken string, metrics *utils.InfluxDB, db *sql.DB, cache 
 	bot.tickers = make(map[string]*time.Ticker)
 	bot.db = db
 	bot.cache = cache
+	bot.guildMembersChunkMutex = make(map[string]*sync.Mutex)
 
 	bot.dg, err = discordgo.New("Bot " + discordToken)
 	if err != nil {
